@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
+#include <vector>
 #include <tuple>
 #include <string>
 
@@ -28,40 +29,38 @@ namespace basics {
 
     /*
     * Given a momentum string in ascending order, returns the set of 
-    * allowed permutations as a queue of tuples with three integers 
-    * each.
+    * allowed permutations as a 2D vector by refernce
     */
-    std::queue<std::tuple<int,int,int>> momPerms(std::string mom) {
-        std::queue<std::tuple<int,int,int>> momList;
-        if (mom == "000") momList.push(std::tuple<int,int,int>{0,0,0});
+    void momPerms(std::string mom, std::vector<std::vector<int>>& momList) {
+        if (mom == "000") momList.push_back(std::vector<int>{0,0,0});
         else if (mom == "001") {
             for (int i = 0; i < dimMomList_001; i++) {
-                momList.push(std::tuple<int,int,int>{momList_001[i][0],momList_001[i][1],momList_001[i][2]});
+                momList.push_back(std::vector<int>{momList_001[i][0],momList_001[i][1],momList_001[i][2]});
             }
         }
         else if (mom == "011") {
             for (int i = 0; i < dimMomList_011; i++) {
-                momList.push(std::tuple<int,int,int>{momList_011[i][0],momList_011[i][1],momList_011[i][2]});
+                momList.push_back(std::vector<int>{momList_011[i][0],momList_011[i][1],momList_011[i][2]});
             }
         }
         else if (mom == "111") {
             for (int i = 0; i < dimMomList_111; i++) {
-                momList.push(std::tuple<int,int,int>{momList_111[i][0],momList_111[i][1],momList_111[i][2]});
+                momList.push_back(std::vector<int>{momList_111[i][0],momList_111[i][1],momList_111[i][2]});
             }
         }
         else if (mom == "002") {
             for (int i = 0; i < dimMomList_002; i++) {
-                momList.push(std::tuple<int,int,int>{momList_002[i][0],momList_002[i][1],momList_002[i][2]});
+                momList.push_back(std::vector<int>{momList_002[i][0],momList_002[i][1],momList_002[i][2]});
             }
         }
         else if (mom == "012") {
             for (int i = 0; i < dimMomList_012; i++) {
-                momList.push(std::tuple<int,int,int>{momList_012[i][0],momList_012[i][1],momList_012[i][2]});
+                momList.push_back(std::vector<int>{momList_012[i][0],momList_012[i][1],momList_012[i][2]});
             }
         }
         else if (mom == "112") {
             for (int i = 0; i < dimMomList_112; i++) {
-                momList.push(std::tuple<int,int,int>{momList_112[i][0],momList_112[i][1],momList_112[i][2]});
+                momList.push_back(std::vector<int>{momList_112[i][0],momList_112[i][1],momList_112[i][2]});
             }
         }
         // If not in allowed set, throw error.
@@ -69,7 +68,6 @@ namespace basics {
             std::string errormsg = "Momentum " + mom + " not in allowed set {000,001,011,111,002,012,112}.\n";
             throw errormsg;
         }
-        return momList;
         
     }
     

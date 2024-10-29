@@ -1,4 +1,6 @@
 #include <fstream>
+#include <vector>
+#include "generic_funcs.h"
 #include "read_Ecm_dat.h"
 
 namespace {
@@ -20,11 +22,22 @@ int main(int argc, char** argv)
         readEcm::EcmData E_structs(filename);
         std::cout << "Finished reading in data\n";
 
-        
+
         readEcm::energyLevel l;
         while (!E_structs.isQueueEmpty()) {
             l = E_structs.popLevelInfo();
             std::cout << "mom = " << l.mom << std::endl;
+        }
+
+
+        std::cout << "\nTesting momPerms:\n";
+        std::vector<std::vector<int>> momList;
+        basics::momPerms("011", momList);
+        for (int i = 0; i < momList.size(); i++) {
+            for (int j = 0; j < momList[i].size(); j++) {
+                std::cout << momList[i][j] << " ";
+            }
+            std::cout << std::endl;
         }
     }
     catch (std::string s) {

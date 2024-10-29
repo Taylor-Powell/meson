@@ -15,7 +15,6 @@
 #include <fstream>
 #include <string>
 #include <queue>
-#include "adat_arrays.h"
 
 namespace readEcm {
     struct energyLevel {

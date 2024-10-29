@@ -1,5 +1,4 @@
 #include "read_Ecm_dat.h"
-#include "generic_funcs.h"
 
 namespace readEcm {
 
