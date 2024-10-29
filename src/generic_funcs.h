@@ -8,6 +8,11 @@
 #include <string>
 
 namespace basics {
+    
+    /*
+    * Set of momentum lists with allowed cubic rotations and their dims
+    * Includes {000,001,011,111,002,012,112}
+    */
     const int momList_001[][3] = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
     const int dimMomList_001 = 6;
     const int momList_002[][3] = {{2, 0, 0}, {-2, 0, 0}, {0, 2, 0}, {0, -2, 0}, {0, 0, 2}, {0, 0, -2}};
@@ -21,6 +26,11 @@ namespace basics {
     const int momList_112[][3] = {{1, 1, 2}, {1, 2, 1}, {2, 1, 1}, {-1, 1, 2}, {-1, 2, 1}, {1, -1, 2}, {1, 2, -1}, {2, -1, 1}, {2, 1, -1}, {1, 1, -2}, {1, -2, 1}, {-2, 1, 1}, {-1, -1, 2}, {-1, 2, -1}, {2, -1, -1}, {-1, 1, -2}, {-1, -2, 1}, {1, -1, -2}, {1, -2, -1}, {-2, -1, 1}, {-2, 1, -1}, {-1, -1, -2}, {-1, -2, -1}, {-2, -1, -1}};
     const int dimMomList_112 = 24;
 
+    /*
+    * Given a momentum string in ascending order, returns the set of 
+    * allowed permutations as a queue of tuples with three integers 
+    * each.
+    */
     std::queue<std::tuple<int,int,int>> momPerms(std::string mom) {
         std::queue<std::tuple<int,int,int>> momList;
         if (mom == "000") momList.push(std::tuple<int,int,int>{0,0,0});
@@ -53,6 +63,11 @@ namespace basics {
             for (int i = 0; i < dimMomList_112; i++) {
                 momList.push(std::tuple<int,int,int>{momList_112[i][0],momList_112[i][1],momList_112[i][2]});
             }
+        }
+        // If not in allowed set, throw error.
+        else {
+            std::string errormsg = "Momentum " + mom + " not in allowed set {000,001,011,111,002,012,112}.\n";
+            throw errormsg;
         }
         return momList;
         

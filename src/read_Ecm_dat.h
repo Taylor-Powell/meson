@@ -3,13 +3,8 @@
  *
  * Description: 
  *
- * This file is a streamlined and commented mashup of several 
- * files related to subduction in ADAT. Included files are:
- *      adat/lib/hadron/irreps_su2.h
- *      adat/lib/hadron/irreps_cubic.h
- *      adat/lib/hadron/irreps_cubic_oct.h
- *      adat/lib/hadron/irreps_cubic_helicity.h 
- *      adat/lib/hadron/subduce_tables.h
+ * This file contains the EcmData class to hold information read 
+ * in from a file for a set of energy levels.
  *
  */
 

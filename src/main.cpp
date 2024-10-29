@@ -20,7 +20,7 @@ int main(int argc, char** argv)
         readEcm::EcmData E_structs(filename);
         std::cout << "Finished reading in data\n";
 
-
+        
         readEcm::energyLevel l;
         while (!E_structs.isQueueEmpty()) {
             l = E_structs.popLevelInfo();
