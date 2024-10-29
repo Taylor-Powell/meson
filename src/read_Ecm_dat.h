@@ -1,0 +1,59 @@
+// -*- C++ -*-
+/* File: read_Ecm_dat.h
+ *
+ * Description: 
+ *
+ * This file is a streamlined and commented mashup of several 
+ * files related to subduction in ADAT. Included files are:
+ *      adat/lib/hadron/irreps_su2.h
+ *      adat/lib/hadron/irreps_cubic.h
+ *      adat/lib/hadron/irreps_cubic_oct.h
+ *      adat/lib/hadron/irreps_cubic_helicity.h 
+ *      adat/lib/hadron/subduce_tables.h
+ *
+ */
+
+#ifndef __read_Ecm_dat_h__
+#define __read_Ecm_dat_h__
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <queue>
+#include "adat_arrays.h"
+
+namespace readEcm {
+    struct energyLevel {
+        int V;
+        std::string irrep, mom;
+        double E, err, anis, at_mpi;
+    };
+    class EcmData {
+        public:
+            // Constructors and Destructor
+            EcmData() {}
+            EcmData(std::string filename) { readData(filename); }
+            ~EcmData() {}
+
+            // Inline functions
+            inline int getNumLevels() { return numLvls; };
+            inline energyLevel frontLevelInfo() { return Evals.front(); }
+            inline void pushBackLevelInfo(energyLevel l) {Evals.push(l);}
+            bool isQueueEmpty() { return Evals.empty(); }
+
+            // Functions defined in read_Ecm_dat.cpp
+            void readData(std::string filename);
+            energyLevel popLevelInfo();
+
+        private:
+            std::queue<energyLevel> Evals;
+            int numLvls;
+    };
+
+    
+}
+
+
+
+
+#endif

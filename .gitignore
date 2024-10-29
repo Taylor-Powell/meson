@@ -1,0 +1,7 @@
+*.csv
+build/
+data/
+src/subduce*
+src/xml*
+src/adat*
+.vscode/
