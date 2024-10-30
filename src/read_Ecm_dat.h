@@ -16,11 +16,11 @@
 #include <string>
 #include <queue>
 
-namespace readEcm {
+namespace ecm {
     struct energyLevel {
         int V;
         std::string irrep, mom;
-        double E, err, anis, at_mpi;
+        double E, err, anis, at_mpi, twopi_chiL;
     };
     class EcmData {
         public:

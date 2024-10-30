@@ -1,7 +1,8 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include "read_Ecm_dat.h"
 
-namespace readEcm {
-
+namespace ecm {
     /*
     * Function to read the data from file for a particular energy.
     * Format of the file should be as:
@@ -30,9 +31,11 @@ namespace readEcm {
 
             while (file >> E.V >> E.mom >> E.irrep >> E.E >> E.err) {
                 Evals.push(E);
+                E.twopi_chiL = 2.0 * M_PI / (E.anis * E.V);
             }
         }
         numLvls = Evals.size();
+
     }
 
     /*

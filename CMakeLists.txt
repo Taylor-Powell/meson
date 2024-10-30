@@ -9,7 +9,8 @@ add_executable(meson
                src/main.cpp
                src/read_Ecm_dat.h
                src/read_Ecm_dat.cpp
-               src/generic_funcs.h)
+               src/generic_funcs.h
+               src/EvsQsq.h)
 
 set(CMAKE_CXX_FLAGS "-O2")
 set(CMAKE_C_FLAGS "-O2")
