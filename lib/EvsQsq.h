@@ -1,9 +1,7 @@
 // -*- C++ -*-
 /* File: EvsQsq.h
  *
- * Description: 
- *
- * This file contains 
+ * @brief This file contains 
  *
  */
 
@@ -64,8 +62,6 @@ namespace ecm {
                 }
             }
         }
-        
-
     }
 }
 

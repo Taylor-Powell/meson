@@ -1,9 +1,9 @@
 #include <fstream>
 #include <vector>
 #include <iomanip>
-#include "read_Ecm_dat.h"
-#include "generic_funcs.h"
-#include "EvsQsq.h"
+#include "../lib/read_Ecm_dat.h"
+#include "../lib/generic_funcs.h"
+#include "../lib/EvsQsq.h"
 
 typedef std::vector<double> dvec;
 typedef std::vector<int> ivec;
@@ -23,7 +23,7 @@ namespace {
 int main(int argc, char** argv)
 {    
     ///////////////// Test reading in data from file /////////////////////
-    #if 0
+    #if 1
     if (argc != 2) {
         return usage1(argc, argv);
     }
@@ -134,7 +134,7 @@ int main(int argc, char** argv)
 
 
     ////////////////// Test matchingPair() functions //////////////////////
-    #if 1
+    #if 0
     if (argc != 3) {
         return usage2(argc, argv);
     }
