@@ -1,5 +1,6 @@
 set(EXES
     read_Ecm
+    EvsQsq_out
 )
 
 foreach(EXE ${EXES})

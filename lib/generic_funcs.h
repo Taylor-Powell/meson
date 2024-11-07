@@ -28,7 +28,7 @@ namespace basics {
     *   - Default indices are {0,1}
     *   - Default precision is 1.0e-10
     */
-   template <typename T>
+    template <typename T>
     bool isUniquePair_vec2D(vec2D<T>& list, T v1, T v2, int i1=0, int i2=1, T eps = 1.0e-10) {
         for (int i = 0; i < list.size(); i++)
             if ((std::abs(list[i][i1] - v1) < eps) && 
@@ -45,7 +45,7 @@ namespace basics {
     *   - Default indices are {0,1}
     *   - Default precision is 1.0e-10
     */
-   template <typename T>
+    template <typename T>
     int findMatchingPair_vec2D(vec2D<T>& list, T v1, T v2, int i1=0, int i2=1, T eps = 1.0e-10) {
         for (int i = 0; i < list.size(); i++)
             if ((std::abs(list[i][i1] - v1) < eps) && 
@@ -54,10 +54,7 @@ namespace basics {
         return -1; 
     }
 
-    /*
-    * Given a momentum string in ascending order, returns the set of 
-    * allowed permutations as a 2D vector of integers
-    */
+    // Forward declarations
     vec2D<int> getMomPerms(std::string mom);
 }
 

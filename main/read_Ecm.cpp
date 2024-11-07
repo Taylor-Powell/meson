@@ -1,9 +1,8 @@
 #include <fstream>
 #include <vector>
 #include <iomanip>
-#include "../lib/read_Ecm_dat.h"
+#include "../lib/EcmData.h"
 #include "../lib/generic_funcs.h"
-#include "../lib/EvsQsq.h"
 
 typedef std::vector<double> dvec;
 typedef std::vector<int> ivec;

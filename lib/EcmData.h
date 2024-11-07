@@ -8,13 +8,14 @@
  *
  */
 
-#ifndef __read_Ecm_dat_h__
-#define __read_Ecm_dat_h__
+#ifndef __EcmData_h__
+#define __EcmData_h__
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <queue>
+#include "generic_funcs.h"
 
 namespace ecm {
     struct energyLevel {
@@ -39,6 +40,7 @@ namespace ecm {
             void readData(std::string filename);
             energyLevel popLevelInfo();
             void printParams();
+            void outputEvsQsq(std::string outfile, basics::vec2D<int> qMomList);
 
         private:
             std::queue<energyLevel> Evals;
@@ -46,7 +48,9 @@ namespace ecm {
             int numLvls;
     };
 
-    
+    // Forward declarations
+    double getQsq(ecm::energyLevel& l, std::vector<int> q, std::vector<int> mom);
+    bool check3Mom(std::vector<int> mom3);  
 }
 
 
