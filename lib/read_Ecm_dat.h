@@ -20,7 +20,7 @@ namespace ecm {
     struct energyLevel {
         int V;
         std::string irrep, mom;
-        double E, err, anis, at_mpi, twopi_chiL;
+        double E, err, at_mpi, twopi_chiL;
     };
     class EcmData {
         public:
@@ -33,14 +33,16 @@ namespace ecm {
             inline int getNumLevels() { return numLvls; };
             inline energyLevel frontLevelInfo() { return Evals.front(); }
             inline void pushBackLevelInfo(energyLevel l) {Evals.push(l);}
-            bool isQueueEmpty() { return Evals.empty(); }
+            inline bool isQueueEmpty() { return Evals.empty(); }
 
             // Functions defined in read_Ecm_dat.cpp
             void readData(std::string filename);
             energyLevel popLevelInfo();
+            void printParams();
 
         private:
             std::queue<energyLevel> Evals;
+            double anis, at_mpi;
             int numLvls;
     };
 

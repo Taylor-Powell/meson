@@ -12,6 +12,8 @@ set(MESON_HDRS
 install(FILES ${MESON_HDRS} DESTINATION include/meson)
 
 target_sources(meson PUBLIC
+    EvsQsq.cpp
+    generic_funcs.cpp
     read_Ecm_dat.cpp
 )
 

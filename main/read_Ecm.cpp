@@ -32,18 +32,8 @@ int main(int argc, char** argv)
         std::cout << "Reading in data\n";
         ecm::EcmData E_structs(infile);
         std::cout << "Finished reading in data\n\n";
-
-        ecm::energyLevel l;
-        std::cout << std::left;
-        while (!E_structs.isQueueEmpty()) {
-            l = E_structs.popLevelInfo();
-            std::cout << "V = " << std::setw(5) <<  l.V 
-                      << "E = " << std::setw(10) <<  l.E 
-                      << "+/- " << std::setw(11) << l.err
-                      << "mom = " << std::setw(6) << l.mom
-                      << "irrep = " << std::setw(6) << l.irrep
-                      << std::endl;
-        }
+        
+        E_structs.printParams();
     }
     catch (std::string s) {
         std::cout << "\n\nERROR IN PROGRAM:\n" << s << std::endl;
