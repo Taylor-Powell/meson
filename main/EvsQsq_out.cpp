@@ -16,9 +16,7 @@ namespace {
     ivec2D qMomList {{0,0,0},{1,0,0},{1,1,0},{1,1,1},{2,0,0}};
 }
 int main(int argc, char** argv)
-{    
-    ///////////////// Test reading in data from file /////////////////////
-    #if 1
+{
     if (argc != 2) {
         return usage(argc, argv);
     }
@@ -40,6 +38,5 @@ int main(int argc, char** argv)
     catch (std::string s) {
         std::cout << "\n\nERROR IN PROGRAM:\n" << s << std::endl;
     }
-    #endif
     return 0;
 }

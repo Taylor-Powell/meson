@@ -118,7 +118,7 @@ namespace ecm {
             l = popLevelInfo();
             pMomList = basics::getMomPerms(l.mom);
             for (int i = 0; i < qMomList.size(); i++) {
-                qmom = qMomList[0];
+                qmom = qMomList[i];
                 for (int j = 0; j < pMomList.size(); j++) {
                     pmom = pMomList[j];
                     mom3 = { pmom[0]-qmom[0], pmom[1]-qmom[1], pmom[2]-qmom[2]};
@@ -135,7 +135,8 @@ namespace ecm {
             }
         }
         for (int i = 0; i < outvals.size(); i++) {
-            out << outvals[i][0] << " " << outvals[i][1] << " " << outcount[i] << std::endl;
+            out << outvals[i][0] << " " << outvals[i][1] << " " << outcount[i];
+            if (i != outvals.size() - 1) out << std::endl;
         }
         out.close();
     }
