@@ -23,6 +23,19 @@ namespace ecm {
         std::string irrep, mom;
         double E, err, at_mpi, twopi_chiL;
     };
+    struct outVals {
+        std::vector<std::vector<int>> qmoms, Pmoms, pmoms;
+        double qsq, Ecm;
+        int count;
+        outVals(std::vector<std::vector<int>> q, std::vector<std::vector<int>> P, std::vector<std::vector<int>> p, double q2, double E) {
+            qmoms = q;
+            Pmoms = P;
+            pmoms = p;
+            qsq = q2;
+            Ecm = E;
+            count = 1;
+        }
+    };
     class EcmData {
         public:
             // Constructors and Destructor

@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
         // Create the output file name as the input file name with "_out.dat" appended
         std::string outfile = infile;
-        outfile.insert(outfile.find(".dat"), "_out");
+        outfile.insert(outfile.find(".dat"), "_out_v2");
         // remove "inputs/" from the outfile name and replace with "data/"
         outfile.replace(0, 7, "data/");
 

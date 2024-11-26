@@ -104,9 +104,8 @@ namespace ecm {
         energyLevel l;
         basics::vec2D<int> pMomList;
         std::vector<int> qmom, pmom, mom3;
-        std::tuple<double,int,double,int> pts(0.0, 0, 0.0, 1);
         basics::vec2D<double> outvals;
-        std::vector<int> outcount;
+        std::vector<outVals> output;
         int index;
 
         if (!out) {
@@ -128,14 +127,26 @@ namespace ecm {
                     index = basics::findMatchingPair_vec2D(outvals, l.E, val);
                     if (index == -1) {
                         outvals.push_back({l.E, val});
-                        outcount.push_back(1);
+                        ecm::outVals ov({qmom}, {pmom}, {mom3}, val, l.E);
+                        output.push_back(ov);
                     }
-                    else outcount[index] += 1;
+                    else {
+                        output[index].count += 1;
+                        output[index].qmoms.push_back(qmom);
+                        output[index].Pmoms.push_back(pmom);
+                        output[index].pmoms.push_back(mom3);
+                    }
                 }
             }
         }
-        for (int i = 0; i < outvals.size(); i++) {
-            out << outvals[i][0] << " " << outvals[i][1] << " " << outcount[i];
+        out << "Ecm qsq count {Pmom pmom qmom}" << std::endl;
+        for (int i = 0; i < output.size(); i++) {
+            out << output[i].Ecm << " " << output[i].qsq << " " << output[i].count;
+            for (int j = 0; j < output[i].qmoms.size(); j++) {
+                out << " {" << output[i].Pmoms[j][0] << output[i].Pmoms[j][1] << output[i].Pmoms[j][2];
+                out << " " << output[i].pmoms[j][0] << output[i].pmoms[j][1] << output[i].pmoms[j][2];
+                out << " " << output[i].qmoms[j][0] << output[i].qmoms[j][1] << output[i].qmoms[j][2] << "}";
+            }
             if (i != outvals.size() - 1) out << std::endl;
         }
         out.close();
