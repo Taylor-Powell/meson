@@ -33,6 +33,8 @@ namespace ecm {
                     std::getline(ss, var, '=');
                     if (var == "anis") ss >> anis;
                     else if (var == "at_mpi") ss >> at_mpi;
+                    else if (var == "P") ss >> parity;
+                    else if (var == "J") ss >> spin;
                     else continue;
                 }
                 else if ((var[0] == 'V') && (var[1] != ' ')) {
@@ -46,6 +48,7 @@ namespace ecm {
                 else continue;
             }
             numLvls = Evals.size();
+            etaTilde = parity * std::pow(-1, spin);
             
             if ((anis == 0.0) || (at_mpi == 0.0) || (numLvls == 0)) {
                 std::cout << "Printing file parameters as read from file:\n";

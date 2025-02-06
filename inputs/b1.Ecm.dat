@@ -1,5 +1,7 @@
 anis=3.455
 at_mpi=0.06906
+P=1
+J=1
 
 V mom irrep E err
 V16 000 T1p 0.221142 0.001018

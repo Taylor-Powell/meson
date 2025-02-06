@@ -58,7 +58,7 @@ namespace ecm {
         private:
             std::queue<energyLevel> Evals;
             double anis, at_mpi;
-            int numLvls;
+            int numLvls, parity, spin, etaTilde;
     };
 
     // Forward declarations

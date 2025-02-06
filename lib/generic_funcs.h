@@ -56,6 +56,7 @@ namespace basics {
 
     // Forward declarations
     vec2D<int> getMomPerms(std::string mom);
+    std::string getIrrep(int etaTilde, std::string mom, int spin, int helicity);
 }
 
 

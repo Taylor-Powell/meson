@@ -26,4 +26,25 @@ namespace basics {
         // If not in allowed set, throw error.
         else throw std::string("Momentum " + mom + " not in allowed set {000,001,011,111,002,012,112}.");        
     }
+
+    std::string getIrrep(int etaTilde, std::string mom, int spin, int helicity) {
+        if ((helicity == 0) && (etaTilde == 1)) return "A1";
+        else if (helicity ==0) return "A2";
+        if (mom == "000") {
+            if ((helicity == 1) && (etaTilde == 1)) return "T1p";
+            else if (helicity == 1) return "T2m";
+        }
+        if ((mom == "001") || (mom == "002")) {
+            if (helicity == 1) return "E2";
+        }
+        if (mom == "011") {
+            if (helicity == 1) return "B1B2";
+        }
+        if (mom == "111") {
+            if (helicity == 1) return "E2";
+        }
+        if ((mom == "210") || (mom == "211")) {
+            if (helicity == 1) return "A1A2";
+        }
+    }
 }
