@@ -1,4 +1,5 @@
 #include <cmath>
+#include <vector>
 #include "generic_funcs.h"
 
 namespace basics {
@@ -27,24 +28,33 @@ namespace basics {
         else throw std::string("Momentum " + mom + " not in allowed set {000,001,011,111,002,012,112}.");        
     }
 
-    std::string getIrrep(int etaTilde, std::string mom, int spin, int helicity) {
-        if ((helicity == 0) && (etaTilde == 1)) return "A1";
-        else if (helicity ==0) return "A2";
-        if (mom == "000") {
-            if ((helicity == 1) && (etaTilde == 1)) return "T1p";
-            else if (helicity == 1) return "T2m";
+    std::vector<std::string> getIrreps(int etaTilde, std::string mom, int helicity) {
+        std::vector<std::string> irrepList;
+        if ((helicity == 0) && (etaTilde == 1)) irrepList.push_back("A1");
+        else if (helicity == 0) irrepList.push_back("A2");
+        else if (mom == "000") {
+            if (etaTilde == 1) irrepList.push_back("T1p");
+            else irrepList.push_back("T2m");
         }
-        if ((mom == "001") || (mom == "002")) {
-            if (helicity == 1) return "E2";
+        else if ((mom == "001") || (mom == "002")) irrepList.push_back("E2");
+        else if (mom == "011") {
+            irrepList.push_back("B1");
+            irrepList.push_back("B2");
         }
-        if (mom == "011") {
-            if (helicity == 1) return "B1B2";
+        else if (mom == "111") irrepList.push_back("E2");        
+        else if ((mom == "210") || (mom == "211")) {
+            irrepList.push_back("A1");
+            irrepList.push_back("A2");
         }
-        if (mom == "111") {
-            if (helicity == 1) return "E2";
+        return irrepList;
+    }
+
+    double subductHelicity(int etaTilde, std::string irrep, std::string mom, int helicity, int irrepRow) {
+        if (helicity == 0) {
+            if ((etaTilde == 1) && (irrep == "A1")) return 1.0;
+            else if ((etaTilde == -1) && (irrep == "A2")) return 1.0;
+            else return 0.0;
         }
-        if ((mom == "210") || (mom == "211")) {
-            if (helicity == 1) return "A1A2";
-        }
+        return 0.0;
     }
 }

@@ -21,7 +21,11 @@ namespace ecm {
     struct energyLevel {
         int V;
         std::string irrep, mom;
-        double E, err, at_mpi, twopi_chiL;
+        double E, err, twopi_chiL;
+        basics::vec2D<int> momPerms;
+        basics::vec2D<double> fourMoms;
+        std::vector<double> fourMom;
+
     };
     struct outVals {
         std::vector<std::vector<int>> qmoms, Pmoms, pmoms;
@@ -54,15 +58,17 @@ namespace ecm {
             energyLevel popLevelInfo();
             void printParams();
             void outputEvsQsq(std::string outfile, basics::vec2D<int> qMomList);
+            void outputNumLevels(std::string outfile, basics::vec2D<int> qMomList);
+            double getQsq(energyLevel& l, std::vector<int> q, std::vector<int> mom);
+            double getOmegaVal(energyLevel& l, std::vector<double> pPi);
 
         private:
             std::queue<energyLevel> Evals;
-            double anis, at_mpi;
+            double anis, at_mpi, at_mb1, at_inv;
             int numLvls, parity, spin, etaTilde;
     };
 
     // Forward declarations
-    double getQsq(ecm::energyLevel& l, std::vector<int> q, std::vector<int> mom);
     bool check3Mom(std::vector<int> mom3);  
 }
 

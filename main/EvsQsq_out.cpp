@@ -6,6 +6,7 @@
 
 typedef std::vector<double> dvec;
 typedef std::vector<int> ivec;
+typedef basics::vec2D<double> dvec2D;
 typedef basics::vec2D<int> ivec2D;
 
 namespace {
@@ -14,6 +15,7 @@ namespace {
         return -1;
     }
     ivec2D qMomList {{0,0,0},{1,0,0},{1,1,0},{1,1,1},{2,0,0}};
+
 }
 int main(int argc, char** argv)
 {
