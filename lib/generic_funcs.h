@@ -95,21 +95,6 @@ namespace basics {
         return -1; 
     }
 
-    vec2D<cd> polRot_Dic4 = {{1,0,0},{0,1,0},{0,0,1}};
-    vec2D<cd> polRot_Dic2 = {{0.853553,0,0},{0,0.57735,0},{0,0,0.853553}};
-    vec2D<cd> polRot_Dic3 = {{0.670146-0.415829 * j1,0,0},{0,0,0.57735},{0,0,0.670146+0.415829 * j1}};
-    vec2D<cd> polRot_C40mn = {{0.420578-0.848721*j1,0,0},{0,0,0.894427},{0,0,0.420578+0.848721*j1}}; 
-    vec2D<cd> polRot_C4nnm = {{-0.0864113+0.904128*j1,0,0},{0,0,0.816497},{0,0,-0.0864113-0.904128*j1}};
-
-    void rotPolVec(vec2D<cd>& polVec, std::string sym) {
-        if (sym == "Dic4") polVec = matMult(polVec, polRot_Dic4);
-        else if (sym == "Dic2") polVec = matMult(polVec, polRot_Dic2);
-        else if (sym == "Dic3") polVec = matMult(polVec, polRot_Dic3);
-        else if (sym == "C40mn") polVec = matMult(polVec, polRot_C40mn);
-        else if (sym == "C4nnm") polVec = matMult(polVec, polRot_C4nnm);
-        else throw std::string("Symmetry " + sym + " not recognized in basics::rotPolVec.\n");
-    }
-
     // Forward declarations
     vec2D<int> getMomPerms(std::string mom);
     std::vector<std::string> getIrreps(int etaTilde, std::string mom, int helicity);

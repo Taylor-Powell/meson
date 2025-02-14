@@ -1,39 +1,28 @@
 #ifndef __rotations_h__
 #define __rotations_h__
 
-#include <iostream>
-#include <fstream>
-#include <queue>
 #include <vector>
-#include <tuple>
 #include <string>
 #include <cmath>
 #include <complex>
 #include "generic_funcs.h"
 
-namespace rotations {
+namespace {
     typedef std::complex<double> cd;
     cd j1 = cd(0,1);
 
     template <typename T>
     using vec2D = std::vector<std::vector<T>>;
 
+    // These are wrong... Need to fix notebook
     vec2D<cd> polRot_Dic4 = {{1,0,0},{0,1,0},{0,0,1}};
     vec2D<cd> polRot_Dic2 = {{0.853553,0,0},{0,0.57735,0},{0,0,0.853553}};
     vec2D<cd> polRot_Dic3 = {{0.670146-0.415829 * j1,0,0},{0,0,0.57735},{0,0,0.670146+0.415829 * j1}};
     vec2D<cd> polRot_C40mn = {{0.420578-0.848721*j1,0,0},{0,0,0.894427},{0,0,0.420578+0.848721*j1}}; 
     vec2D<cd> polRot_C4nnm = {{-0.0864113+0.904128*j1,0,0},{0,0,0.816497},{0,0,-0.0864113-0.904128*j1}};
 
-    void rotPolVec_init(vec2D<cd>& polVec, std::string sym) {
-        if (sym == "Dic4") polVec = basics::matMult(polVec, polRot_Dic4);
-        else if (sym == "Dic2") polVec = basics::matMult(polVec, polRot_Dic2);
-        else if (sym == "Dic3") polVec = basics::matMult(polVec, polRot_Dic3);
-        else if (sym == "C40mn") polVec = basics::matMult(polVec, polRot_C40mn);
-        else if (sym == "C4nnm") polVec = basics::matMult(polVec, polRot_C4nnm);
-        else throw std::string("Symmetry " + sym + " not recognized in basics::rotPolVec.\n");
-    }
-
-    // Dic4
+    // Rotation matrices... Avoiding coding up matrix exponential
+    // Possible alternative, store exponentiations of Jy,Jz operators for Pi/2 increments and build from there
     vec2D<cd> rot_0_0_0 = {{1,0,0},{0,1,0},{0,0,1}};
     vec2D<cd> rot_0_pi2_0 = {{0,0,1},{0,1,0},{-1,0,0}};
     vec2D<cd> rot_pi2_pi2_0 = {{0,-1,0},{0,0,1},{-1,0,0}};
@@ -42,6 +31,16 @@ namespace rotations {
     vec2D<cd> rot_0_pi_0 = {{-1,0,0},{0,1,0},{0,0,-1}};
     vec2D<cd> rot_2pi_0_3pi2 = {{0,1,0},{0,0,-1},{-1,0,0}};
     vec2D<cd> rot_0_npi_0 = {{-1,0,0},{0,1,0},{0,0,-1}};
+}
+namespace rotations {
+    void rotPolVec_init(vec2D<cd>& polVec, std::string sym) {
+        if (sym == "Dic4") polVec = basics::matMult(polVec, polRot_Dic4);
+        else if (sym == "Dic2") polVec = basics::matMult(polVec, polRot_Dic2);
+        else if (sym == "Dic3") polVec = basics::matMult(polVec, polRot_Dic3);
+        else if (sym == "C40mn") polVec = basics::matMult(polVec, polRot_C40mn);
+        else if (sym == "C4nnm") polVec = basics::matMult(polVec, polRot_C4nnm);
+        else throw std::string("Symmetry " + sym + " not recognized in basics::rotPolVec_init.\n");
+    }
 
     void rotPolVec(vec2D<cd>& polVec, std::string sym, std::string mom) {
         if (sym == "Dic4") {
@@ -51,7 +50,7 @@ namespace rotations {
             else if (mom == "-100") polVec = basics::matMult(polVec, rot_pi_pi2_0);
             else if (mom == "0-10") polVec = basics::matMult(polVec, rot_npi2_pi2_0);
             else if (mom == "00-1") polVec = basics::matMult(polVec, rot_0_pi_0);
-            else throw std::string("Momentum " + mom + " not recognized in basics::rotPolVec.\n");
+            else throw std::string("Momentum " + mom + " for symmetry " + sym + " not recognized in basics::rotPolVec.\n");
         }
         else if (sym == "Dic2") {
             if (mom == "011") polVec = basics::matMult(polVec, rot_0_0_0);
@@ -60,7 +59,24 @@ namespace rotations {
             else if (mom == "1-10") polVec = basics::matMult(polVec, rot_npi2_pi2_0);
             else if (mom == "01-1") polVec = basics::matMult(polVec, rot_0_npi_0);
             // Add rest or generalize
+            else throw std::string("Momentum " + mom + " for symmetry " + sym + " not recognized in basics::rotPolVec.\n");
         }
+        else if (sym == "Dic3") {
+            if (mom == "111") polVec = basics::matMult(polVec, rot_0_0_0);
+            // Add rest or generalize
+            else throw std::string("Momentum " + mom + " for symmetry " + sym + " not recognized in basics::rotPolVec.\n");
+        }
+        else if (sym == "C40mn") {
+            if (mom == "012") polVec = basics::matMult(polVec, rot_0_0_0);
+            // Add rest or generalize
+            else throw std::string("Momentum " + mom + " for symmetry " + sym + " not recognized in basics::rotPolVec.\n");
+        }
+        else if (sym == "C4nnm") {
+            if (mom == "112") polVec = basics::matMult(polVec, rot_0_0_0);
+            // Add rest or generalize
+            else throw std::string("Momentum " + mom + " for symmetry " + sym + " not recognized in basics::rotPolVec.\n");
+        }
+        else throw std::string("Symmetry " + sym + " not recognized in basics::rotPolVec.\n");
     }
 }
 #endif
