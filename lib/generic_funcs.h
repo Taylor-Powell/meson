@@ -63,6 +63,20 @@ namespace basics {
         return u;
     }
 
+    template <typename T>
+    std::vector<T> rotVec (std::vector<T>& vec, double phi, double theta, double psi) {
+        double cphi = std::cos(phi);
+        double sphi = std::sin(phi);
+        double ctheta = std::cos(theta);
+        double stheta = std::sin(theta);
+        double cpsi = std::cos(psi);
+        double spsi = std::sin(psi);
+        std::vector<std::vector<T>> rot1 = {{cphi,-sphi,0},{sphi,cphi,0},{0,0,1}};
+        std::vector<std::vector<T>> rot2 = {{ctheta,0,-stheta},{0,1,0},{stheta,0,ctheta}};
+        std::vector<std::vector<T>> rot3 = {{cpsi,-spsi,0},{spsi,cpsi,0},{0,0,1}};
+        return matVecMult(matMult(matMult(rot1,rot2),rot3),vec);
+    }
+
     /*
     * Function to search through vec2D list for a matching pair.
     *   - Returns false is a match is found
