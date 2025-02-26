@@ -10,12 +10,32 @@
 #include <cmath>
 #include <complex>
 
-namespace basics {
+namespace {
     typedef std::complex<double> cd;
-    cd j1 = cd(0,1);
+    const cd j1 = cd(0,1);
+}
 
+namespace basics {    
     template <typename T>
     using vec2D = std::vector<std::vector<T>>;
+
+    // define a few macros
+    #define MAX(x,y) (x>y ? x : y)
+    #define MIN(x,y) (x<y ? x : y)
+
+    template <typename T> // From Numerical Recipes
+    T factorial(int n) {
+        static int ntop = 4;
+        static T a[33] = {1.0, 1.0, 2.0, 6.0, 24.0};
+        int j;
+        if (n < 0) throw std::string("Negative factorial in routine factorial");
+        if (n > 32) return std::exp(std::lgamma(n + 1.0));
+        while (ntop < n) {
+            j = ntop++;
+            a[ntop] = a[j] * ntop;
+        }
+        return a[n];
+    }
     
     template <typename T>
     T dot(std::vector<T>& v1, std::vector<T>& v2) {
@@ -112,6 +132,7 @@ namespace basics {
     // Forward declarations
     vec2D<int> getMomPerms(std::string mom);
     std::vector<std::string> getIrreps(int etaTilde, std::string mom, int helicity);
+    double subductHelicity(int etaTilde, std::string irrep, std::string mom, int helicity, int irrepRow);
 }
 
 

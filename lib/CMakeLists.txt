@@ -15,6 +15,7 @@ target_sources(meson PUBLIC
     generic_funcs.cpp
     EcmData.cpp
     rotations.h
+    Wigner.h
 )
 
 install(TARGETS meson)

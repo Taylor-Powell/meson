@@ -1,6 +1,9 @@
 set(EXES
     read_Ecm
     EvsQsq_out
+    subHelicity_test
+    Wigner_d_test
+    Wigner_D_test
 )
 
 foreach(EXE ${EXES})
