@@ -12,7 +12,6 @@
 
 namespace {
     typedef std::complex<double> cd;
-    const cd j1 = cd(0,1);
 }
 
 namespace basics {    
@@ -91,10 +90,12 @@ namespace basics {
         double stheta = std::sin(theta);
         double cpsi = std::cos(psi);
         double spsi = std::sin(psi);
-        std::vector<std::vector<T>> rot1 = {{cphi,-sphi,0},{sphi,cphi,0},{0,0,1}};
-        std::vector<std::vector<T>> rot2 = {{ctheta,0,-stheta},{0,1,0},{stheta,0,ctheta}};
-        std::vector<std::vector<T>> rot3 = {{cpsi,-spsi,0},{spsi,cpsi,0},{0,0,1}};
-        return matVecMult(matMult(matMult(rot1,rot2),rot3),vec);
+        vec2D<T> rot1 = {{cphi,-sphi,0},{sphi,cphi,0},{0,0,1}};
+        vec2D<T> rot2 = {{ctheta,0,-stheta},{0,1,0},{stheta,0,ctheta}};
+        vec2D<T> rot3 = {{cpsi,-spsi,0},{spsi,cpsi,0},{0,0,1}};
+        vec2D<T> rot = matMult(rot1, rot2);
+        rot = matMult(rot, rot3);
+        return matVecMult(rot, vec);
     }
 
     /*

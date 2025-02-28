@@ -9,7 +9,6 @@
 
 namespace {
     typedef std::complex<double> cd;
-    cd j1 = cd(0,1);
 
     template <typename T>
     using vec2D = std::vector<std::vector<T>>;

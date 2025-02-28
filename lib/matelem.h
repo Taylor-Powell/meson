@@ -14,7 +14,6 @@
  #include <string>
  #include "generic_funcs.h"
  #include "rotations.h"
- #include "Wigner.h"
 
 namespace {
     typedef std::complex<double> cd;
@@ -31,7 +30,7 @@ namespace matelem {
         double E, Eerr, twopi_chiL, mState;
         cd coeff;
     };
-    
+
     class matelem {
         public:
             matelem() {}

@@ -20,7 +20,7 @@ target_sources(meson PUBLIC
     matelem.cpp
     rotations.cpp
     readAndLoop.cpp
-    Wigner.h
+    Wigner.cpp
 )
 
 install(TARGETS meson)

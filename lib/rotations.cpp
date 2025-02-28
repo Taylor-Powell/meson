@@ -24,9 +24,10 @@ namespace rotations {
                     }
                 }
                 throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " for symmetry " + sym + " not recognized in rotations::getSymAngles.\n");
-            }
-            throw std::string("Symmetry " + sym + " not recognized in rotations::getSymAngles.\n");
+            }            
         }
+        throw std::string("Symmetry " + sym + " not recognized in rotations::getSymAngles.\n");
+        return {0, 0, 0};
     }
     
     void rotPolVec_init(std::vector<cd>& polVec, std::string sym) {

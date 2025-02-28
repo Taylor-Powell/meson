@@ -29,8 +29,6 @@ namespace readAndLoop {
             // Functions defined in read_Ecm_dat.cpp
             void readData(std::string filename);
             void printParams();
-            std::vector<qTuple> getqTuples(basics::vec2D<int> qMomList);
-            std::string getPiParamString(std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL);
             void outputKinematics(std::string outfile, basics::vec2D<int> qMomList);
 
         private:
@@ -38,6 +36,10 @@ namespace readAndLoop {
             std::queue<matelem::matelem> matelems;
             double anis, at_mpi, at_mb1, at_inv;
             int numLvls, parity, spin, etaTilde;
+
+            // Convenience functions for outputKinematics
+            std::vector<qTuple> getqTuples(basics::vec2D<int> qMomList);
+            std::string getPiParamString(std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL);
     };
 }
 #endif

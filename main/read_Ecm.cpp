@@ -4,9 +4,7 @@
 #include "../lib/EcmData.h"
 #include "../lib/generic_funcs.h"
 
-typedef std::vector<double> dvec;
-typedef std::vector<int> ivec;
-typedef basics::vec2D<int> ivec2D;
+
 
 namespace {
     int usage1(int argc, char** argv) {
@@ -17,6 +15,10 @@ namespace {
         std::cerr << "Usage: " << argv[0] << " <input file> <output file>" << std::endl;
         return -1;
     }
+    typedef std::vector<double> dvec;
+    typedef std::vector<int> ivec;
+    typedef basics::vec2D<int> ivec2D;
+    
     ivec2D qMomList {{0,0,0},{1,0,0},{1,1,0},{1,1,1},{2,0,0}};
 }
 int main(int argc, char** argv)
