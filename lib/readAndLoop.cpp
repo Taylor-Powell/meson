@@ -132,7 +132,7 @@ namespace readAndLoop {
         for (int k = 0; k < qMomList.size(); k++) {
             qTuple q;
             q.qMom3 = qMomList[k];
-            q.momStr = std::to_string(qMomList[k][0]) + std::to_string(qMomList[k][1]) + std::to_string(qMomList[k][2]);
+            q.momStr = std::to_string(qMomList[k][2]) + std::to_string(qMomList[k][1]) + std::to_string(qMomList[k][1]);
             for (int hel = -1; hel <= 1; hel++) {
                 q.helicity = hel;
                 if (q.momStr == "000") {

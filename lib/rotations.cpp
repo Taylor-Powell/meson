@@ -12,10 +12,12 @@ namespace rotations {
         else if (momstr == "111") return "Dic3";
         else if (momstr == "012") return "C40mn";
         else if (momstr == "112") return "C4nnm";
+        else if (momstr == "000") return "full";
         else throw std::string("Momentum " + momstr + " not recognized in rotations::getSym().\n");
     }
     
     std::vector<double> getRotAngles(std::string sym, std::vector<int> mom) {
+        if (sym == "full") return {0, 0, 0};
         for (int i = 0; i < symList.size(); i++) {
             if (symList[i] == sym) {
                 for (int j = 0; j < sym_moms[i].size(); j++) {
@@ -24,16 +26,21 @@ namespace rotations {
                     }
                 }
                 throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " for symmetry " + sym + " not recognized in rotations::getSymAngles.\n");
-            }            
+            }          
         }
-        throw std::string("Symmetry " + sym + " not recognized in rotations::getSymAngles.\n");
+        throw std::string("Symmetry " + sym + " not recognized in rotations::getRotAngles.\n");
         return {0, 0, 0};
     }
     
     void rotPolVec_init(std::vector<cd>& polVec, std::string sym) {
         for (int i = 0; i < symList.size(); i++) {
             if (symList[i] == sym) {
-                polVec = basics::rotVec(polVec, symInit_angles[i][0], symInit_angles[i][1], symInit_angles[i][2]);
+                std::vector<cd> polVec_Spatial(polVec.begin() + 1, polVec.end());
+                polVec_Spatial = basics::rotVec(polVec_Spatial, symInit_angles[i][0], symInit_angles[i][1], symInit_angles[i][2]);
+                // Replace last three components of polVec with polVec_Spatial
+                for (int j = 0; j < 3; j++) {
+                    polVec[j+1] = polVec_Spatial[j];
+                }
                 return;
             }
         }
@@ -41,7 +48,12 @@ namespace rotations {
 
     void rotPolVec(std::vector<cd>& polVec, std::string sym, std::vector<int> mom) {
         std::vector<double> angles = getRotAngles(sym, mom);
-        polVec = basics::rotVec(polVec, angles[0], angles[1], angles[2]);
+        std::vector<cd> polVec_Spatial(polVec.begin() + 1, polVec.end());
+        polVec_Spatial = basics::rotVec(polVec_Spatial, angles[0], angles[1], angles[2]);
+        // Replace last three components of polVec with polVec_Spatial
+        for (int j = 0; j < 3; j++) {
+            polVec[j+1] = polVec_Spatial[j];
+        }
     }    
 
     std::vector<cd> getPolz4(double E, double mom_sq, int helicity, bool current) {
