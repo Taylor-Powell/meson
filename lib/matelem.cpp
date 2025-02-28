@@ -1,0 +1,117 @@
+#include <numbers>
+#include <cmath>
+#include <iomanip>
+#include <sstream>
+#include "matelem.h"
+
+
+namespace matelem {
+    state::state(std::string p, std::vector<int> threemom, double anis, double mass, int J, int P, int row, int hel, bool current) {
+        std::stringstream ss(p);
+        ss >> V >> momstr >> irrep >> E >> Eerr;
+        twopi_chiL = 2.0 * std::numbers::pi / (anis * V);
+        mom = threemom;
+        std::vector<double> threeMom = {mom[0] * twopi_chiL, mom[1] * twopi_chiL, mom[2] * twopi_chiL};
+        fourMom = {E, threeMom[0], threeMom[1], threeMom[2]};
+        double mom_sq = basics::dot(threeMom, threeMom);
+        params = p;
+        spin = J;
+        parity = P;
+        mState = mass;
+        coeff = 1.0;
+        etaTilde = parity * std::pow(-1, spin);
+        irrepRow = row;
+        helicity = hel;
+        sym = rotations::getSym(momstr);
+        polVec = rotations::getPol4(E, mom_sq, mom, helicity, sym, current);
+    }
+
+    void matelem::projectAll() {
+        subductState(init);
+        subductState(cur);
+        subductState(fin);
+        ExpandHelOps(init);
+        ExpandHelOps(cur);
+        ExpandHelOps(fin);
+    }
+    
+    void matelem::calcKinFactors() {
+        std::vector<cd> kin;
+        for (int i = 0; i < init.size(); i++) {
+            for (int j = 0; j < cur.size(); j++) {
+                for (int k = 0; k < fin.size(); k++) {
+                    kin = kinFactors(init[i], cur[j], fin[k]);
+                    kFactors.push_back(kin);
+                }
+            }
+        }
+    }
+
+    void matelem::subductState(std::vector<state>& s) {
+        if (s.size() != 1) throw std::string("subductState called with vector of size != 1.\n");
+        if (s[0].etaTilde == 0) s[0].etaTilde = s[0].parity * std::pow(-1, s[0].spin);
+        if (s[0].helicity == 0) s[0].coeff *= basics::subductHelicity(s[0].etaTilde, s[0].irrep, s[0].momstr, s[0].helicity, s[0].irrepRow);
+        else {
+            s[0].coeff *= basics::subductHelicity(s[0].etaTilde, s[0].irrep, s[0].momstr, s[0].helicity, s[0].irrepRow);
+            s.push_back(s[0]);
+            s[1].helicity = -s[1].helicity;
+            s[1].coeff *= basics::subductHelicity(s[1].etaTilde, s[1].irrep, s[1].momstr, s[1].helicity, s[1].irrepRow);
+        }
+    }
+    
+    void matelem::ExpandHelOps(std::vector<state>& s) {
+        std::vector<state> s2;
+        for (int i = 0; i < s.size(); i++) {
+            state sTemp;
+            std::vector<double> angles;
+            std::vector<state> newStates;
+            for (int i = 0; i <= 2 * s[i].spin + 1; i++) {
+                sTemp = s[i];
+                angles = rotations::getRotAngles(sTemp.momstr, sTemp.mom);
+                sTemp.spinZ = -s[i].spin + i;
+                sTemp.coeff *= std::conj(WignerD::Wigner_D(s[i].spin, s[i].spinZ, s[i].helicity, angles[0], angles[1], angles[2]));
+                newStates.push_back(sTemp);
+            }
+            s2.insert(s2.end(), newStates.begin(), newStates.end());
+        }
+        s = s2;
+    }
+
+    cd matelem::getOmegaVal(state& in, state& out) {
+        cd val = basics::fourDot(in.fourMom, out.fourMom);
+        val -= std::pow(in.mState, 2) * std::pow(out.mState, 2);        
+        return val;
+    }
+
+    std::vector<cd> matelem::kinFactors(state& in, state& cur, state& out) {
+        std::vector<cd> kin;
+        cd Omega = getOmegaVal(in, out);
+        cd tempVal;
+
+        // Calculate the E1 coefficient
+        std::vector<cd> Ecoeff;
+        for (int i = 0; i < 4; i++) {
+            tempVal = basics::fourDot(in.fourMom, out.fourMom) * in.fourMom[i];
+            tempVal -= std::pow(in.mState, 2) * out.fourMom[i];
+            tempVal *= basics::fourDot(in.polVec, out.fourMom) / Omega;
+            tempVal = out.polVec[i] - tempVal; 
+            Ecoeff.push_back(tempVal);
+        }
+        kin.push_back(basics::fourDot(Ecoeff, cur.polVec));
+
+
+        // Calculate the C1 coefficient
+        std::vector<cd> Ccoeff;
+        for (int i = 0; i < 4; i++) {
+            tempVal = basics::fourDot(in.fourMom, out.fourMom);
+            tempVal *= in.fourMom[i] * out.fourMom[i];
+            tempVal -= std::pow(in.mState, 2) * out.fourMom[i];
+            tempVal -= std::pow(out.mState, 2) * in.fourMom[i];
+            tempVal *= basics::fourDot(in.polVec, out.fourMom) * in.mState / Omega;
+            tempVal /= std::sqrt(basics::fourDot(cur.fourMom, cur.fourMom));
+        }
+        kin.push_back(basics::fourDot(Ccoeff, cur.polVec));
+
+        return kin;
+    }
+}

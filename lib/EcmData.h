@@ -66,10 +66,7 @@ namespace ecm {
             std::queue<energyLevel> Evals;
             double anis, at_mpi, at_mb1, at_inv;
             int numLvls, parity, spin, etaTilde;
-    };
-
-    // Forward declarations
-    bool check3Mom(std::vector<int> mom3);  
+    }; 
 }
 
 

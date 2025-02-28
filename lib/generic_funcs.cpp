@@ -72,4 +72,13 @@ namespace basics {
         }
         return 0.0;
     }
+
+    /** Simple function to check if momentum is <= 211 in all permutations */
+    bool check3Mom(std::vector<int> mom3) {
+        if (((abs(mom3[0]) < 3) && (abs(mom3[0]) < 2) && (abs(mom3[0]) < 2))
+            || ((abs(mom3[0]) < 2) && (abs(mom3[0]) < 3) && (abs(mom3[0]) < 2)) 
+            || ((abs(mom3[0]) < 2) && (abs(mom3[0]) < 2) && (abs(mom3[0]) < 3)))
+            return true;
+        return false;
+    }
 }

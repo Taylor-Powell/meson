@@ -21,6 +21,7 @@ namespace {
     double twopi = 2.0 * std::numbers::pi;
 }
 namespace rotations {
+    // Lists of symmetries, initial angles, allowed momenta for each symmetry, and chosen angles for each momentum.
     const std::vector<std::string> symList = {"Dic4", "Dic2", "Dic3", "C40mn", "C4nnm"};
     const std::vector<std::vector<double>> symInit_angles = {
         {0, 0, 0}, {0, pi2, 0}, {0, pi4, 0.955316618124509}, {0, pi2, 0.4636476090008061}, {0, -3.0 * pi4, 0.6154797086703874}
@@ -40,28 +41,25 @@ namespace rotations {
         {{0, 0, 0}, {3.0 * pi2, -pi2, 0}, {0, pi2, pi2}, {0, 0, pi2}, {3.0 * pi2, -pi2, 3.0 * pi2}, {0, 0, 3.0 * pi2}, {3.0 * pi2, -pi2, pi2}, {0, pi2, pi}, {0, pi2, 0}, {0, -pi, pi2}, {3.0 * pi2, pi2, pi2}, {0, -pi2, 0}, {0, 0, pi}, {3.0 * pi2, -pi2, pi}, {0, pi2, 3.0 * pi2}, {0, -pi, 0}, {3.0 * pi2, pi2, pi}, {0, -pi, pi}, {3.0 * pi2, pi2, 0}, {0, -pi2, 3.0 * pi2}, {0, -pi2, pi2}, {0, -pi, 3.0 * pi2}, {3.0 * pi2, pi2, 3.0 * pi2}, {0, -pi2, pi}}
     };
 
-    void rotPolVec_init(vec2D<cd>& polVec, std::string sym) {
-        for (int i = 0; i < symList.size(); i++) {
-            if (symList[i] == sym) {
-                polVec = basics::rotVec(polVec, symInit_angles[i][0], symInit_angles[i][1], symInit_angles[i][2]);
-                return;
-            }
-        }
-    }
 
-    void rotPolVec(vec2D<cd>& polVec, std::string sym, std::vector<int> mom) {
-        for (int i = 0; i < symList.size(); i++) {
-            if (symList[i] == sym) {
-                for (int j = 0; j < sym_moms[i].size(); j++) {
-                    if (mom == sym_moms[i][j]) {
-                        polVec = basics::rotVec(polVec, sym_angles[i][j][0], sym_angles[i][j][1], sym_angles[i][j][2]);
-                        return;
-                    }
-                }
-                throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " for symmetry " + sym + " not recognized in rotations::rotPolVec.\n");
-            }
-            throw std::string("Symmetry " + sym + " not recognized in rotations::rotPolVec.\n");
-        }
-    }
+    /////////////////// Forward declarations ///////////////////
+
+    // Convenience function
+    std::string getSym(std::string momstr);
+
+    // Get the rotation angles for a given symmetry and momentum
+    std::vector<double> getRotAngles(std::string sym, std::vector<int> mom);
+
+    // Initialize the polarization vector for a given symmetry from z-axis
+    void rotPolVec_init(std::vector<cd>& polVec, std::string sym);
+
+    // Rotate the polarization vector from angle given by rotPolVec_init for a given momentum
+    void rotPolVec(std::vector<cd>& polVec, std::string sym, std::vector<int> mom);
+
+    // Get the polarization vector for a given helicity along the z-axis
+    std::vector<cd> getPolz4(double E, double mom_sq, int helicity, bool current);
+
+    // Get the polarization vector for a given helicity, rotated from the z-axis
+    std::vector<cd> getPol4(double E, double mom_sq, std::vector<int> mom3, int helicity, std::string sym, bool current);
 }
 #endif

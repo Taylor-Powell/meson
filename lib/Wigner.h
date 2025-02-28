@@ -1,5 +1,5 @@
-#ifndef __wignerd_h__
-#define __wignerd_h__
+#ifndef __wigner_h__
+#define __wigner_h__
 
 #include <vector>
 #include <string>

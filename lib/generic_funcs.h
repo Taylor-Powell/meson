@@ -133,6 +133,8 @@ namespace basics {
     vec2D<int> getMomPerms(std::string mom);
     std::vector<std::string> getIrreps(int etaTilde, std::string mom, int helicity);
     double subductHelicity(int etaTilde, std::string irrep, std::string mom, int helicity, int irrepRow);
+    /** Simple function to check if momentum is <= 211 in all permutations */
+    bool check3Mom(std::vector<int> mom3);
 }
 
 

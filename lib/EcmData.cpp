@@ -100,15 +100,6 @@ namespace ecm {
         return -std::pow(l.E - Eval, 2) + std::pow(l.twopi_chiL, 2) * basics::dot(q, q);
     }
 
-    /** Simple function to check if momentum is <= 211 in all permutations */
-    bool check3Mom(std::vector<int> mom3) {
-        if (((abs(mom3[0]) < 3) && (abs(mom3[0]) < 2) && (abs(mom3[0]) < 2))
-            || ((abs(mom3[0]) < 2) && (abs(mom3[0]) < 3) && (abs(mom3[0]) < 2)) 
-            || ((abs(mom3[0]) < 2) && (abs(mom3[0]) < 2) && (abs(mom3[0]) < 3)))
-            return true;
-        return false;
-    }
-
     void EcmData::outputEvsQsq(std::string outfile, basics::vec2D<int> qMomList) {
         std::ofstream out(outfile);
         double val, E3, omega;
@@ -134,7 +125,7 @@ namespace ecm {
                 for (int j = 0; j < l.momPerms.size(); j++) {
                     pmom = l.momPerms[j];
                     mom3 = { pmom[0]-qmom[0], pmom[1]-qmom[1], pmom[2]-qmom[2]};
-                    if (!check3Mom(mom3)) continue;
+                    if (!basics::check3Mom(mom3)) continue;
                     E3 = std::pow(at_mpi,2);
                     E3 += std::pow(l.twopi_chiL, 2) * basics::dot(mom3, mom3);
                     E3 = std::sqrt(E3);
@@ -194,7 +185,7 @@ namespace ecm {
                 for (int j = 0; j < l.momPerms.size(); j++) {
                     pmom = l.momPerms[j];
                     mom3 = { pmom[0]-qmom[0], pmom[1]-qmom[1], pmom[2]-qmom[2]};
-                    if (!check3Mom(mom3)) continue;
+                    if (!basics::check3Mom(mom3)) continue;
                     val = getQsq(l, qmom, mom3);
                     
                     index = basics::findMatchingPair_vec2D(outvals, l.E, val);
