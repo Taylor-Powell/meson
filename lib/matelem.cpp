@@ -7,33 +7,44 @@
 
 
 namespace matelem {
-    state::state(std::string p, std::vector<int> threemom, double anis, double mass, int J, int P, int row, int hel, bool current) {
+    state::state(std::string p, std::vector<int> threemom, double anis, int J, int P, int row, int Jz, bool current) {
         std::stringstream ss(p);
         ss >> V >> momstr >> irrep >> E >> Eerr;
         twopi_chiL = 2.0 * std::numbers::pi / (anis * V);
         mom = threemom;
         std::vector<double> threeMom = {mom[0] * twopi_chiL, mom[1] * twopi_chiL, mom[2] * twopi_chiL};
         fourMom = {E, threeMom[0], threeMom[1], threeMom[2]};
-        double mom_sq = basics::dot(threeMom, threeMom);
+        double mom3_sq = basics::dot(threeMom, threeMom);
         params = p;
         spin = J;
+        spinZ = Jz;
         parity = P;
-        mState = mass;
+        if (current) mState = 0.0;
+        else mState = std::sqrt((basics::fourDot(fourMom, fourMom)).real()); 
         coeff = 1.0;
         etaTilde = parity * std::pow(-1, spin);
         irrepRow = row;
-        helicity = hel;
         sym = rotations::getSym(momstr);
-        polVec = rotations::getPol4(E, mom_sq, mom, helicity, sym, current);
+        polVec = rotations::getPol4_Jz(E, mom3_sq, mom, Jz, sym, current);
     }
 
-    void matelem::projectAll() {
-        subductState(init);
-        subductState(cur);
-        subductState(fin);
+    void matelem::expandAllHelOps() {
         ExpandHelOps(init);
         ExpandHelOps(cur);
         ExpandHelOps(fin);
+    }
+
+    void matelem::subductAll(bool isHelState) {
+        if (isHelState) {
+            subductHelicityState(init);
+            subductHelicityState(cur);
+            subductHelicityState(fin);
+        }
+        else {
+            subductJzState(init);
+            subductJzState(cur);
+            subductJzState(fin);
+        }
     }
     
     void matelem::calcKinFactors() {
@@ -42,13 +53,29 @@ namespace matelem {
             for (int j = 0; j < cur.size(); j++) {
                 for (int k = 0; k < fin.size(); k++) {
                     kin = kinFactors(init[i], cur[j], fin[k]);
+                    #if 1
+                    std::cout << "Kinematic factors for state " << i << " " << j << " " << k << ": ";
+                    std::cout << "E1 = " << kin[0];
+                    std::cout << ", C1 = " << kin[1] << std::endl;
+                    #endif
                     kFactors.push_back(kin);
                 }
             }
         }
     }
 
-    void matelem::subductState(std::vector<state>& s) {
+    cd matelem::getQsq(state& in, state& out) {
+        std::vector<cd> qMom;
+        std::cout << "qMom = ";
+        for (int i = 0; i < 4; i++) {
+            qMom.push_back(out.fourMom[i] - in.fourMom[i]);
+            std::cout << out.fourMom[i] << " - " << in.fourMom[i] << " = " << qMom[i] << ", ";
+        }
+        std::cout << "qMom size = " << qMom.size() << std::endl;
+        return (-1.0) * basics::fourDot(qMom, qMom);
+    }
+
+    void matelem::subductHelicityState(std::vector<state>& s) {
         if (s.size() != 1) throw std::string("subductState called with vector of size != 1.\n");
         if (s[0].etaTilde == 0) s[0].etaTilde = s[0].parity * std::pow(-1, s[0].spin);
         if (s[0].helicity == 0) s[0].coeff *= basics::subductHelicity(s[0].etaTilde, s[0].irrep, s[0].momstr, s[0].helicity, s[0].irrepRow);
@@ -58,6 +85,11 @@ namespace matelem {
             s[1].helicity = -s[1].helicity;
             s[1].coeff *= basics::subductHelicity(s[1].etaTilde, s[1].irrep, s[1].momstr, s[1].helicity, s[1].irrepRow);
         }
+    }
+
+    void matelem::subductJzState(std::vector<state>& s) {
+        if (s.size() != 1) throw std::string("subductState called with vector of size != 1.\n");
+        
     }
     
     void matelem::ExpandHelOps(std::vector<state>& s) {

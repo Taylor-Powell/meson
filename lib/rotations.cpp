@@ -15,6 +15,19 @@ namespace rotations {
         else if (momstr == "000") return "full";
         else throw std::string("Momentum " + momstr + " not recognized in rotations::getSym().\n");
     }
+
+    std::string getMomStr(std::vector<int> mom) {
+        std::string sym;
+        int mom_sq = basics::dot(mom, mom);
+        if (mom_sq == 0) return "000";
+        else if (mom_sq == 1) return "001";
+        else if (mom_sq == 2) return "011";
+        else if (mom_sq == 3) return "111";
+        else if (mom_sq == 4) return "002"; 
+        else throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " not recognized in rotations::getSym.\n");
+
+
+    }
     
     std::vector<double> getRotAngles(std::string sym, std::vector<int> mom) {
         if (sym == "full") return {0, 0, 0};
@@ -78,8 +91,15 @@ namespace rotations {
         return polz;
     }
 
-    std::vector<cd> getPol4(double E, double mom_sq, std::vector<int> mom3, int helicity, std::string sym, bool current) {
+    std::vector<cd> getPol4_hel(double E, double mom_sq, std::vector<int> mom3, int helicity, std::string sym, bool current) {
         std::vector<cd> polz = getPolz4(E, mom_sq, helicity, current);
+        rotPolVec_init(polz, sym);
+        rotPolVec(polz, sym, mom3);
+        return polz;
+    }
+
+    std::vector<cd> getPol4_Jz(double E, double mom_sq, std::vector<int> mom3, int Jz, std::string sym, bool current) {
+        std::vector<cd> polz = getPolz4(E, mom_sq, Jz, current);
         rotPolVec_init(polz, sym);
         rotPolVec(polz, sym, mom3);
         return polz;

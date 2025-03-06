@@ -1,5 +1,5 @@
 #include <fstream>
-#include "../lib/readAndLoop.h"
+#include "../lib/outputKinFactors.h"
 
 namespace {
     int usage(int argc, char** argv) {
@@ -10,7 +10,7 @@ namespace {
     typedef std::vector<int> ivec;
     typedef basics::vec2D<int> ivec2D;
     
-    ivec2D qMomList {{0,0,0},{1,0,0},{1,1,0},{1,1,1},{2,0,0}};
+    ivec2D qMomList {{0,0,0},{0,0,1},{0,1,1},{1,1,1},{0,0,2}};
 }
 int main(int argc, char** argv)
 {
@@ -21,9 +21,9 @@ int main(int argc, char** argv)
     }
 
     try {
-        readAndLoop::Data d(argv[1]);
-        d.printParams();
-        d.outputKinematics(argv[2], qMomList);
+        kinFactors::Data d(argv[1]);
+        // d.printParams();
+        // d.outputKinematics(argv[2], qMomList);
     }
     catch (std::string s) {
         std::cout << "\n\nERROR IN PROGRAM:\n" << s << std::endl;

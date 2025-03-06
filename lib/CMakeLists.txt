@@ -8,7 +8,6 @@ set(MESON_HDRS
     matelem.h
     generic_funcs.h
     rotations.h
-    readAndLoop.h
     outputKinFactors.h
     Wigner.h
 )
@@ -20,7 +19,6 @@ target_sources(meson PUBLIC
     EcmData.cpp
     matelem.cpp
     rotations.cpp
-    readAndLoop.cpp
     outputKinFactors.cpp
     Wigner.cpp
 )

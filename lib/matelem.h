@@ -21,7 +21,7 @@ namespace {
 }
 namespace matelem {
     struct state {
-        state(std::string p, std::vector<int> threemom, double anis, double mass, int J, int P, int row, int hel, bool current);
+        state(std::string p, std::vector<int> threemom, double anis, int J, int P, int row, int hel, bool current);
         state() {}
         std::vector<int> mom;
         std::vector<cd> fourMom, polVec;
@@ -40,8 +40,10 @@ namespace matelem {
                 fin.push_back(out);
             }
             // Functions
-            void projectAll();
+            void expandAllHelOps();
+            void subductAll(bool isHelState = true);
             void calcKinFactors();
+            cd getQsq(state& in, state& out);
             ~matelem() {}
         private:
             // Variables
@@ -50,7 +52,8 @@ namespace matelem {
 
             // Forward Declarations
             void ExpandHelOps(std::vector<state>& s);
-            void subductState(std::vector<state>& s);
+            void subductHelicityState(std::vector<state>& s);
+            void subductJzState(std::vector<state>& s);
             cd getOmegaVal(state& in, state& out);
             std::vector<cd> kinFactors(state& in, state& cur, state& out);
     };

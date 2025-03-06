@@ -4,7 +4,7 @@ set(EXES
     subHelicity_test
     Wigner_d_test
     Wigner_D_test
-    readAndLoop_test
+    kinFactors_test
 )
 
 foreach(EXE ${EXES})
