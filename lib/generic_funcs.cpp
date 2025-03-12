@@ -1,34 +1,49 @@
 #include <cmath>
 #include <vector>
+#include <algorithm>
 #include "generic_funcs.h"
 
 namespace basics {
+    // Flexible function to get all permutations of a 3-digit momentum string
+    // Allows for string to be unordered
+    vec2D<int> getMomPerms(const std::string mom) {
+        if (mom.size() != 3) {
+            throw std::string("Momentum " + mom + " is not 3 digits in basics::getMomPerms.\n");
+        }
+        // Initialize variables
+        vec2D<int> perms;
+        std::vector<int> momVec;
+        
+        // Convert string to vector of integers
+        for (char c : mom) {
+            if (!std::isdigit(c)) {
+                throw std::string("Momentum " + mom + " is not a set of integers in basics::getMomPerms.\n");
+            }
+            momVec.push_back(c - '0');
+        }
+        
+        std::sort(momVec.begin(), momVec.end());
+        do { // Generate all permutations
+            int numFlips = 8; // 2^3 possible sign flips
+            for (int i = 0; i < numFlips; ++i) { // Loop over all possible sign flips
+                std::vector<int> flippedVec = momVec;
+                bool skip = false;
+                for (int j = 0; j < 3; ++j) {
+                    if (i & (1 << j)) { // If jth bit is set
+                        flippedVec[j] = -flippedVec[j];
+                    }
+                }
+                perms.push_back(flippedVec);
+            }
+        } while (std::next_permutation(momVec.begin(), momVec.end()));
 
-    /* Set of momentum lists with allowed cubic rotations and their dims
-     * Includes {000,001,011,111,002,012,112} */
-    vec2D<int> momList_001 {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
-    vec2D<int> momList_002 {{2, 0, 0}, {-2, 0, 0}, {0, 2, 0}, {0, -2, 0}, {0, 0, 2}, {0, 0, -2}};
-    vec2D<int> momList_011 {{1, 1, 0}, {0, 1, 1}, {1, 0, 1}, {1, -1, 0}, {0, 1, -1}, {-1, 0, 1}, {-1, 1, 0}, {0, -1, 1}, {1, 0, -1}, {-1, -1, 0}, {0, -1, -1}, {-1, 0, -1}};
-    vec2D<int> momList_111 {{1, 1, 1}, {-1, 1, 1}, {1, -1, 1}, {1, 1, -1}, {-1, -1, 1}, {1, -1, -1}, {-1, 1, -1}, {-1, -1, -1}};
-    vec2D<int> momList_012 {{0, 1, 2}, {1, 2, 0}, {2, 0, 1}, {0, 2, 1}, {2, 1, 0}, {1, 0, 2}, {0, 1, -2}, {1, -2, 0}, {-2, 0, 1}, {0, -2, 1}, {-2, 1, 0}, {1, 0, -2}, {0, -1, 2}, {-1, 2, 0}, {2, 0, -1}, {0, 2, -1}, {2, -1, 0}, {-1, 0, 2}, {0, -1, -2}, {-1, -2, 0}, {-2, 0, -1}, {0, -2, -1}, {-2, -1, 0}, {-1, 0, -2}};
-    vec2D<int> momList_112 {{1, 1, 2}, {1, 2, 1}, {2, 1, 1}, {-1, 1, 2}, {-1, 2, 1}, {1, -1, 2}, {1, 2, -1}, {2, -1, 1}, {2, 1, -1}, {1, 1, -2}, {1, -2, 1}, {-2, 1, 1}, {-1, -1, 2}, {-1, 2, -1}, {2, -1, -1}, {-1, 1, -2}, {-1, -2, 1}, {1, -1, -2}, {1, -2, -1}, {-2, -1, 1}, {-2, 1, -1}, {-1, -1, -2}, {-1, -2, -1}, {-2, -1, -1}};
-    
-    /* Given a momentum string in ascending order, returns the set of 
-     * allowed permutations as a 2D vector of integers */
-    vec2D<int> getMomPerms(std::string mom) {
-        if (mom == "000") return vec2D<int>{{0,0,0}};
-        else if (mom == "001") return momList_001;
-        else if (mom == "011") return momList_011;
-        else if (mom == "111") return momList_111;
-        else if (mom == "002") return momList_002;
-        else if (mom == "012") return momList_012;
-        else if (mom == "112") return momList_112;
-
-        // If not in allowed set, throw error.
-        else throw std::string("Momentum " + mom + " not in allowed set {000,001,011,111,002,012,112}.");        
+        // Remove duplicate permutations
+        std::sort(perms.begin(), perms.end());
+        perms.erase(std::unique(perms.begin(), perms.end()), perms.end());
+        return perms;
     }
 
-    std::vector<std::string> getIrreps(int etaTilde, std::string mom, int helicity) {
+    std::vector<std::string> getIrreps(int etaTilde, const std::string mom, int helicity) {
         std::vector<std::string> irrepList;
         if ((helicity == 0) && (etaTilde == 1)) irrepList.push_back("A1");
         else if (helicity == 0) irrepList.push_back("A2");
@@ -50,7 +65,7 @@ namespace basics {
     }
 
     // Only written up to helicity 1 for current need.
-    double subductHelicity(int etaTilde, std::string irrep, std::string mom, int helicity, int irrepRow) {
+    double subductHelicity(int etaTilde, const std::string irrep, const std::string mom, int helicity, int irrepRow) {
         if (helicity == 0) {
             if ((etaTilde == 1) && (irrep == "A1")) return 1.0;
             else if ((etaTilde == -1) && (irrep == "A2")) return 1.0;
@@ -74,11 +89,14 @@ namespace basics {
     }
 
     /** Simple function to check if momentum is <= 211 in all permutations */
-    bool check3Mom(std::vector<int> mom3) {
-        if (((abs(mom3[0]) < 3) && (abs(mom3[0]) < 2) && (abs(mom3[0]) < 2))
-            || ((abs(mom3[0]) < 2) && (abs(mom3[0]) < 3) && (abs(mom3[0]) < 2)) 
-            || ((abs(mom3[0]) < 2) && (abs(mom3[0]) < 2) && (abs(mom3[0]) < 3)))
-            return true;
+    bool check3Mom(const std::vector<int> mom3) {
+        if (mom3.size() != 3) {
+            throw std::string("Momentum vector is not 3 digits in basics::check3Mom.\n");
+        }
+        for (int i = 0; i < 3; i++) {
+            if ((abs(mom3[i]) < 3) && (abs(mom3[(i+1)%3]) < 2) && (abs(mom3[(i+2)%3]) < 2))
+                return true;
+        }
         return false;
     }
 }

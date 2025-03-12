@@ -44,27 +44,27 @@ namespace rotations {
     /////////////////// Forward declarations ///////////////////
 
     // Convenience function
-    std::string getSym(std::string momstr);
+    std::string getSym(const std::string momstr);
 
     // Convenience function
-    std::string getMomStr(std::vector<int> mom);
+    std::string getMomStr(const std::vector<int> mom);
 
     // Get the rotation angles for a given symmetry and momentum
-    std::vector<double> getRotAngles(std::string sym, std::vector<int> mom);
+    std::vector<double> getRotAngles(const std::string sym, const std::vector<int> mom);
 
     // Initialize the polarization vector for a given symmetry from z-axis
-    void rotPolVec_init(std::vector<cd>& polVec, std::string sym);
+    void rotPolVec_init(std::vector<cd>& polVec, const std::string sym);
 
     // Rotate the polarization vector from angle given by rotPolVec_init for a given momentum
-    void rotPolVec(std::vector<cd>& polVec, std::string sym, std::vector<int> mom);
+    void rotPolVec(std::vector<cd>& polVec, const std::string sym, const std::vector<int> mom);
 
     // Get the polarization vector for a given spin along the z-axis
     std::vector<cd> getPolz4(double E, double mom_sq, int Jz, bool current);
 
     // Get the polarization vector for a given Jz, rotated from the z-axis
-    std::vector<cd> getPol4_Jz(double E, double mom_sq, std::vector<int> mom3, int Jz, std::string sym, bool current);
+    std::vector<cd> getPol4_Jz(double E, double mom_sq, const std::vector<int> mom3, int Jz, const std::string sym, bool current);
 
     // Get the polarization vector for a given helicity, rotated from the z-axis
-    std::vector<cd> getPol4_hel(double E, double mom_sq, std::vector<int> mom3, int helicity, std::string sym, bool current);
+    std::vector<cd> getPol4_hel(double E, double mom_sq, std::vector<int> mom3, int helicity, const std::string sym, bool current);
 }
 #endif

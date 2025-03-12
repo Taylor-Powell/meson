@@ -7,23 +7,17 @@
 
 
 namespace matelem {
-    state::state(std::string p, std::vector<int> threemom, double anis, int J, int P, int row, int Jz, bool current) {
-        std::stringstream ss(p);
-        ss >> V >> momstr >> irrep >> E >> Eerr;
+    state::state(int V, std::string momstr, std::string irrep, double E, double Eerr, std::vector<int> threemom, double anis, int J, int P, int row, int Jz, bool current) 
+        : V(V), momstr(momstr), irrep(irrep), E(E), Eerr(Eerr), mom(threemom), spin(J), spinZ(Jz), parity(P), irrepRow(row) {
+        
         twopi_chiL = 2.0 * std::numbers::pi / (anis * V);
-        mom = threemom;
         std::vector<double> threeMom = {mom[0] * twopi_chiL, mom[1] * twopi_chiL, mom[2] * twopi_chiL};
         fourMom = {E, threeMom[0], threeMom[1], threeMom[2]};
         double mom3_sq = basics::dot(threeMom, threeMom);
-        params = p;
-        spin = J;
-        spinZ = Jz;
-        parity = P;
         if (current) mState = 0.0;
         else mState = std::sqrt((basics::fourDot(fourMom, fourMom)).real()); 
         coeff = 1.0;
         etaTilde = parity * std::pow(-1, spin);
-        irrepRow = row;
         sym = rotations::getSym(momstr);
         polVec = rotations::getPol4_Jz(E, mom3_sq, mom, Jz, sym, current);
     }

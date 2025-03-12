@@ -4,7 +4,7 @@
 #include "matelem.h"
 
 namespace kinFactors {
-    void Data::readData(std::string filename) {
+    void Data::readData(const std::string filename) {
         std::ifstream file (filename);
         matelem::state s;
         if (!file) {
@@ -48,38 +48,46 @@ namespace kinFactors {
             }
 
             #if 1
-            // Test outputKinematics with single line of .txt file
+            // Test outputKinematics with first line of .txt file
             basics::vec2D<int> qMomList = {{0,0,1}};
             std::string outfile = "kinFactors_Test.txt";
             std::ofstream out(outfile);
             matelem::state s = outStates[0];
+            double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
             std::cout << "Param string = " << s.params << std::endl;
-            basics::vec2D<int> pMomList = basics::getMomPerms(s.momstr);
+            std::cout << "Making in state..." << std::endl;
+            matelem::state in(s.V, s.momstr, s.irrep, s.E, s.Eerr, s.mom, anis, spin, parity, 0, 0, false);
             std::vector<qTuple> qTuples = getqTuples(qMomList);
             std::vector<int> piMom;
-            for (int j = 0; j < pMomList.size(); j++) {
-                std::cout << "Making in state" << std::endl;
-                matelem::state in(s.params, pMomList[j], anis, spin, parity, 0, 0, false);
-                for (int k = 0; k < qTuples.size(); k++) {
-                    std::string cur_param = std::to_string(s.V) + " " + qTuples[k].momStr + " " + qTuples[k].irrep + " 0.0 0.0";
-                    std::cout << "Making current state" << std::endl;
-                    matelem::state cur(cur_param, qTuples[k].qMom3, anis, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, true);
-                    if (!basics::check3Mom(piMom)) {
-                        std::cout << "Skipping to next pMom\n" << std::endl;
-                        piMom.clear();
-                        break;
-                    }
 
-                    std::string pi_param = getPiParamString(piMom, anis, at_mpi, s.twopi_chiL, s.V);
-                    std::cout << "Making out state" << std::endl;
-                    matelem::state out(pi_param, piMom, anis, 0, -1, 0, 0, false);
-                    matelem::matelem m(in, cur, out);
-                    std::cout << "Qsq = " << m.getQsq(in, out) << std::endl;
-                    m.calcKinFactors();
-                    std::cout << "\n\n";
-                    piMom.clear();
-                }
-            }
+
+            // basics::vec2D<int> pMomList = basics::getMomPerms(s.momstr);
+            // std::vector<qTuple> qTuples = getqTuples(qMomList);
+            // std::vector<int> piMom;
+            // for (int j = 0; j < pMomList.size(); j++) {
+            //     std::cout << "Making in state" << std::endl;
+            //     matelem::state in(s.V, s.momstr, s.irrep, s.E, s.Eerr, pMomList[j], anis, spin, parity, 0, 0, false);
+            //     for (int k = 0; k < qTuples.size(); k++) {
+            //         std::cout << "Making current state" << std::endl;
+            //         matelem::state cur(s.V, qTuples[k].momStr, qTuples[k].irrep, 0.0, 0.0, qTuples[k].qMom3, anis, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, true);
+            //         if (!basics::check3Mom(piMom)) {
+            //             std::cout << "Skipping to next pMom\n" << std::endl;
+            //             piMom.clear();
+            //             break;
+            //         }
+            //         std::cout << "Making out state" << std::endl;
+            //         double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
+
+            //         matelem::state out(s.V, rotations::getMomStr(piMom), basics::getIrreps(etaTilde, s.momstr, -1)[0], Epi, 0.0, piMom, anis, 0, -1, 0, 0, false);
+
+
+            //         matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
+            //         std::cout << "Qsq = " << m.getQsq(in, out) << std::endl;
+            //         m.calcKinFactors();
+            //         std::cout << "\n\n";
+            //         piMom.clear();
+            //     }
+            // }
             out.close();
 
 
@@ -107,69 +115,69 @@ namespace kinFactors {
         }
     }
 
-    void Data::outputKinematics(std::string outfile, basics::vec2D<int> qMomList) {
+    void Data::outputKinematics(const std::string outfile, const basics::vec2D<int> qMomList) {
         std::ofstream out(outfile);
-        matelem::state s;
-        basics::vec2D<int> pMomList;
-        std::vector<qTuple> qTuples;
-        std::vector<int> piMom;
-        int index;
+        // matelem::state s;
+        // basics::vec2D<int> pMomList;
+        // std::vector<qTuple> qTuples;
+        // std::vector<int> piMom;
+        // int index;
 
-        if (!out) {
-            std::string errormsg = "Failed to open file in ";
-            errormsg += __func__;
-            throw errormsg;
-        }
-        // Loop over lines in input .txt file for b1
-        for (int i = 0; i < outStates.size(); i++) {
-            s = outStates[i];
+        // if (!out) {
+        //     std::string errormsg = "Failed to open file in ";
+        //     errormsg += __func__;
+        //     throw errormsg;
+        // }
+        // // Loop over lines in input .txt file for b1
+        // for (int i = 0; i < outStates.size(); i++) {
+        //     s = outStates[i];
 
-            pMomList = basics::getMomPerms(s.momstr);
-            // Loop over pMomList for b1 meson
-            for (int j = 0; j < pMomList.size(); j++) {
-                // Initialize the state for the b1 meson
-                // Hardcoding Jz=0 and the irrep is 1-dimensional
-                matelem::state in(s.params, pMomList[j], anis, spin, parity, 0, 0, false);
+        //     pMomList = basics::getMomPerms(s.momstr);
+        //     // Loop over pMomList for b1 meson
+        //     for (int j = 0; j < pMomList.size(); j++) {
+        //         // Initialize the state for the b1 meson
+        //         // Hardcoding Jz=0 and the irrep is 1-dimensional
+        //         matelem::state in(s.params, pMomList[j], anis, spin, parity, 0, 0, false);
 
-                // Loop over qMomList to create unique qTuples
-                qTuples = getqTuples(qMomList);
-                for (int k = 0; k < qTuples.size(); k++) {
-                    // Create the parameter string for the current. 
-                    // I don't care about E and Eerr for now, so its hard-coded to 0.0
-                    std::string cur_param = std::to_string(s.V) + " " + qTuples[k].momStr + " " + qTuples[k].irrep + " 0.0 0.0";
+        //         // Loop over qMomList to create unique qTuples
+        //         qTuples = getqTuples(qMomList);
+        //         for (int k = 0; k < qTuples.size(); k++) {
+        //             // Create the parameter string for the current. 
+        //             // I don't care about E and Eerr for now, so its hard-coded to 0.0
+        //             std::string cur_param = std::to_string(s.V) + " " + qTuples[k].momStr + " " + qTuples[k].irrep + " 0.0 0.0";
 
-                    // Initialize the state for the current
-                    // Hardcoding mass=0 and J^P=1^-
-                    matelem::state cur(cur_param, qTuples[k].qMom3, anis, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, true);
+        //             // Initialize the state for the current
+        //             // Hardcoding mass=0 and J^P=1^-
+        //             matelem::state cur(cur_param, qTuples[k].qMom3, anis, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, true);
 
-                    // Fix the pion state for the current qMom
-                    for (int idx = 0; idx < 3; idx++) {
-                        piMom.push_back(pMomList[j][idx] - qTuples[k].qMom3[idx]);
-                    }
+        //             // Fix the pion state for the current qMom
+        //             for (int idx = 0; idx < 3; idx++) {
+        //                 piMom.push_back(pMomList[j][idx] - qTuples[k].qMom3[idx]);
+        //             }
 
-                    // Create the parameter string for the pion with helper function
-                    std::string pi_param = getPiParamString(piMom, anis, at_mpi, s.twopi_chiL, s.V);
+        //             // Create the parameter string for the pion with helper function
+        //             std::string pi_param = getPiParamString(piMom, anis, at_mpi, s.twopi_chiL, s.V);
                     
-                    // Initialize the state for the pion
-                    // Hardcoding JP=0-, helicity=0 and the irrep is 1-dimensional
-                    matelem::state out(pi_param, piMom, anis, 0, -1, 0, 0, false);
+        //             // Initialize the state for the pion
+        //             // Hardcoding JP=0-, helicity=0 and the irrep is 1-dimensional
+        //             matelem::state out(pi_param, piMom, anis, 0, -1, 0, 0, false);
 
-                    // Create the matelem object and push it to the queue
-                    matelem::matelem m(in, cur, out);
-                    m.subductAll(false);
-                    m.calcKinFactors();
-                    std::complex<double> Qsq = m.getQsq(in, out);
+        //             // Create the matelem object and push it to the queue
+        //             matelem::matelem m(in, cur, out);
+        //             m.subductAll(false);
+        //             m.calcKinFactors();
+        //             std::complex<double> Qsq = m.getQsq(in, out);
 
-                    // Clear piMom for next iteration
-                    piMom.clear();
-                }
-            }
-        }        
+        //             // Clear piMom for next iteration
+        //             piMom.clear();
+        //         }
+        //     }
+        // }        
         out.close();
     }
 
     // Kind of a silly function... But it gets the job done.
-    std::vector<qTuple> Data::getqTuples(basics::vec2D<int> qMomList) {
+    std::vector<qTuple> Data::getqTuples(const basics::vec2D<int> qMomList) {
         std::vector<qTuple> qTuples;
         for (int k = 0; k < qMomList.size(); k++) {
             qTuple q;
@@ -209,7 +217,7 @@ namespace kinFactors {
     }
 
     // Another helper function to declutter Data::outputKinematics()
-    std::string Data::getPiParamString(std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V) {
+    std::string Data::getPiParamString(const std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V) {
         std::string pi_param = std::to_string(V) + " " + rotations::getMomStr(piMom);
         if (piMom[0] == 0 && piMom[1] == 0 && piMom[2] == 0) {
             pi_param += " A1 ";

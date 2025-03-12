@@ -25,9 +25,9 @@ namespace kinFactors {
             inline int getNumLevels() { return numLvls; };
 
             // Functions defined in read_Ecm_dat.cpp
-            void readData(std::string filename);
+            void readData(const std::string filename);
             void printParams();
-            void outputKinematics(std::string outfile, basics::vec2D<int> qMomList);
+            void outputKinematics(const std::string outfile, const basics::vec2D<int> qMomList);
 
         private:
             std::vector<matelem::state> outStates;
@@ -35,8 +35,8 @@ namespace kinFactors {
             int numLvls, parity, spin, etaTilde;
 
             // Convenience functions for outputKinematics
-            std::vector<qTuple> getqTuples(basics::vec2D<int> qMomList);
-            std::string getPiParamString(std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V);
+            std::vector<qTuple> getqTuples(const basics::vec2D<int> qMomList);
+            std::string getPiParamString(const std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V);
     };
 }
 #endif

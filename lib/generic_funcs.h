@@ -23,7 +23,7 @@ namespace basics {
     #define MIN(x,y) (x<y ? x : y)
 
     template <typename T> // From Numerical Recipes
-    T factorial(int n) {
+    T factorial(const int n) {
         static int ntop = 4;
         static T a[33] = {1.0, 1.0, 2.0, 6.0, 24.0};
         int j;
@@ -37,7 +37,7 @@ namespace basics {
     }
     
     template <typename T>
-    T dot(std::vector<T>& v1, std::vector<T>& v2) {
+    T dot(const std::vector<T>& v1, const std::vector<T>& v2) {
         T val = T();
         if (v1.size() != v2.size()) 
             throw std::string("Attempting to dot vectors of unequal size.\n");
@@ -46,19 +46,19 @@ namespace basics {
     }
 
     template <typename T>
-    T kDelta(T i, T j) {
+    T kDelta(const T i, const T j) {
         return (i == j) ? 1 : 0;
     }
 
     template <typename T>
-    T fourDot(std::vector<T>& v1, std::vector<T>& v2) {
+    T fourDot(const std::vector<T>& v1, const std::vector<T>& v2) {
         if (v1.size() != 4 || v2.size() != 4)
             throw std::string("Attempting fourDot vector(s) with size != 4.\n");
-        return v1[0] * v2[0] - dot(v1, v2);
+        return v1[0] * v2[0] - (v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3]);
     }
 
     template <typename T>
-    vec2D<T> matMult(vec2D<T>& A, vec2D<T>& B) {
+    vec2D<T> matMult(const vec2D<T>& A, const vec2D<T>& B) {
         if (A[0].size() != B.size())
             throw std::string("Attempting to multiply matrices of incompatible sizes.\n");
         // Initialize C as empty matrix of size A.rows x B.cols
@@ -71,7 +71,7 @@ namespace basics {
     }
 
     template <typename T>
-    std::vector<T> matVecMult(vec2D<T>& A, std::vector<T>& v) {
+    std::vector<T> matVecMult(const vec2D<T>& A, const std::vector<T>& v) {
         if (A[0].size() != v.size())
             throw std::string("Attempting to multiply matrix and vector of incompatible sizes.\n");
         // Initialize u as empty vector of size A.rows
@@ -83,7 +83,7 @@ namespace basics {
     }
 
     template <typename T>
-    std::vector<T> rotVec (std::vector<T>& vec, double phi, double theta, double psi) {
+    std::vector<T> rotVec (const std::vector<T>& vec, double phi, double theta, double psi) {
         double cphi = std::cos(phi);
         double sphi = std::sin(phi);
         double ctheta = std::cos(theta);
@@ -105,7 +105,7 @@ namespace basics {
     *   - Default precision is 1.0e-10
     */
     template <typename T>
-    bool isUniquePair_vec2D(vec2D<T>& list, T v1, T v2, int i1=0, int i2=1, T eps = 1.0e-10) {
+    bool isUniquePair_vec2D(const vec2D<T>& list, T v1, T v2, int i1=0, int i2=1, T eps = 1.0e-10) {
         for (int i = 0; i < list.size(); i++)
             if ((std::abs(list[i][i1] - v1) < eps) && 
                 (std::abs(list[i][i2] - v2) < eps))
@@ -122,7 +122,7 @@ namespace basics {
     *   - Default precision is 1.0e-10
     */
     template <typename T>
-    int findMatchingPair_vec2D(vec2D<T>& list, T v1, T v2, int i1=0, int i2=1, T eps = 1.0e-10) {
+    int findMatchingPair_vec2D(const vec2D<T>& list, T v1, T v2, int i1=0, int i2=1, T eps = 1.0e-10) {
         for (int i = 0; i < list.size(); i++)
             if ((std::abs(list[i][i1] - v1) < eps) && 
                 (std::abs(list[i][i2] - v2) < eps))
@@ -131,11 +131,11 @@ namespace basics {
     }
 
     // Forward declarations
-    vec2D<int> getMomPerms(std::string mom);
-    std::vector<std::string> getIrreps(int etaTilde, std::string mom, int helicity);
-    double subductHelicity(int etaTilde, std::string irrep, std::string mom, int helicity, int irrepRow);
+    vec2D<int> getMomPerms(const std::string mom);
+    std::vector<std::string> getIrreps(int etaTilde, const std::string mom, int helicity);
+    double subductHelicity(int etaTilde, const std::string irrep, const std::string mom, int helicity, int irrepRow);
     /** Simple function to check if momentum is <= 211 in all permutations */
-    bool check3Mom(std::vector<int> mom3);
+    bool check3Mom(const std::vector<int> mom3);
 }
 
 

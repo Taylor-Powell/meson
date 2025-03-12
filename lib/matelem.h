@@ -21,7 +21,22 @@ namespace {
 }
 namespace matelem {
     struct state {
-        state(std::string p, std::vector<int> threemom, double anis, int J, int P, int row, int hel, bool current);
+        /**
+        Constructor for state struct
+        @param V: Integer length of the spatial volume
+        @param momstr: Momentum string in ascending order
+        @param irrep: Irrep
+        @param E: Energy
+        @param Eerr: Error in the energy
+        @param threemom: Integer vector of the three-momentum
+        @param anis: Anisotropy of the lattice
+        @param J: Spin
+        @param P: Parity
+        @param row: Row of the irrep
+        @param Jz: Spin projection 
+        @param current: Whether the state is a current
+        */ 
+        state(int V, std::string momstr, std::string irrep, double E, double Eerr, std::vector<int> threemom, double anis, int J, int P, int row, int Jz, bool current);
         state() {}
         std::vector<int> mom;
         std::vector<cd> fourMom, polVec;
@@ -33,12 +48,21 @@ namespace matelem {
 
     class matelem {
         public:
-            matelem() {}
-            matelem(state in, state J, state out) {
+            /** Constructor for matelem
+             * @param in: Initial state
+             * @param J: Current state
+             * @param out: Final state
+             * @param V: Integer length of the spatial volume
+             * @param anis: Anisotropy of the lattice
+             * @param twopi_chiL: 2 * pi / (anis * V)
+             */
+            matelem(state in, state J, state out, int V, double anis, double twopi_chiL) : anis(anis), V(V), twopi_chiL(twopi_chiL) {
                 init.push_back(in);
                 cur.push_back(J);
                 fin.push_back(out);
             }
+            /** Default constructor */
+            matelem() {}
             // Functions
             void expandAllHelOps();
             void subductAll(bool isHelState = true);
@@ -47,6 +71,8 @@ namespace matelem {
             ~matelem() {}
         private:
             // Variables
+            double anis, twopi_chiL;
+            int V;
             std::vector<state> init, cur, fin;
             std::vector<std::vector<cd>> kFactors;
 

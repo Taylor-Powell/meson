@@ -1,4 +1,5 @@
 #include <fstream>
+#include <algorithm>
 #include "../lib/outputKinFactors.h"
 
 namespace {
@@ -20,7 +21,7 @@ int main(int argc, char** argv)
         return usage(argc, argv);
     }
 
-    try {
+    try {        
         kinFactors::Data d(argv[1]);
         // d.printParams();
         // d.outputKinematics(argv[2], qMomList);
