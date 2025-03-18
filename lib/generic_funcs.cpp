@@ -65,7 +65,7 @@ namespace basics {
     }
 
     // Only written up to helicity 1 for current need.
-    double subductHelicity(int etaTilde, const std::string irrep, const std::string mom, int helicity, int irrepRow) {
+    double subductHelicity(int etaTilde, const std::string irrep, const std::string momstr, int helicity, int irrepRow) {
         if (helicity == 0) {
             if ((etaTilde == 1) && (irrep == "A1")) return 1.0;
             else if ((etaTilde == -1) && (irrep == "A2")) return 1.0;
@@ -73,10 +73,10 @@ namespace basics {
         }
         if (std::abs(helicity) == 1) {
             int s = 0;
-            if ((irrep == "E2") && ((mom == "001") || (mom == "111") || (mom == "002"))) {
+            if ((irrep == "E2") && ((momstr == "001") || (momstr == "111") || (momstr == "002"))) {
                 s = (irrepRow == 1) ? 1 : -1;
             }
-            else if (((irrep == "B1") || (irrep == "B2")) && (mom == "011")) {
+            else if (((irrep == "B1") || (irrep == "B2")) && (momstr == "011")) {
                 s = (irrep == "B1") ? 1 : -1;
             }
             else if ((irrep == "A1") || (irrep == "A2")) {

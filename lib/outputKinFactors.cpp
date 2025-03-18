@@ -112,12 +112,11 @@ namespace kinFactors {
         std::cout << "numLvls = " << numLvls << std::endl;
         std::cout << std::left;
         for (int i = 0; i < numLvls; i++) {
-            outState s = outStates[i];
-            std::cout << "V = " << std::setw(5) << s.V 
-                      << "E = " << std::setw(10) << s.E 
-                      << "+/- " << std::setw(11) << s.Eerr
-                      << "mom = " << std::setw(6) << s.momstr
-                      << "irrep = " << std::setw(6) << s.irrep
+            std::cout << "V = " << std::setw(5) << outStates[i].V 
+                      << "E = " << std::setw(10) << outStates[i].E 
+                      << "+/- " << std::setw(11) << outStates[i].Eerr
+                      << "mom = " << std::setw(6) << outStates[i].momstr
+                      << "irrep = " << std::setw(6) << outStates[i].irrep
                       << std::endl;
         }
     }
@@ -127,18 +126,22 @@ namespace kinFactors {
             outState s = outStates[i];
             std::ofstream fout(s.outfile);
             double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
+            std::vector<qTuple> qTuples = getqTuples(qMomList);
+
+            // Make the 3-momentum base vector, check if it's <211, and get the momentum permutations
             std::vector<int> mom3;
             for (int i = 0; i < s.momstr.size(); i++) {
                 mom3.push_back(s.momstr[i] - '0');
             }
             if (!basics::check3Mom(mom3)) continue;
             basics::vec2D<int> pMomList = basics::getMomPerms(s.momstr);
-            for (int j = 0; j < pMomList.size(); j++) {
-                if (!basics::check3Mom(pMomList[j])) continue;
-                matelem::state in(s.V, s.irrep, s.E, s.Eerr, pMomList[j], spin, parity, 0, 0, twopi_chiL, false);
-                std::vector<qTuple> qTuples = getqTuples(qMomList);
 
+            // Iterate over the momentum permutations
+            for (int j = 0; j < pMomList.size(); j++) {
+                matelem::state in(s.V, s.irrep, s.E, s.Eerr, pMomList[j], spin, parity, 0, 0, twopi_chiL, false);                
+                // Iterate over all qTuples (mom3, irrep, irrepRow)
                 for(int k = 0; k < qTuples.size(); k++) {
+                    // Fix the pion momentum and irrep, then ensure piMom < 211
                     std::vector<int> piMom;
                     std::string pi_irrep = "A1";
                     for (int ii = 0; ii < 3; ii++) {
@@ -146,9 +149,13 @@ namespace kinFactors {
                         if (piMom[ii] != 0) pi_irrep = "A2";
                     }
                     if (!basics::check3Mom(piMom)) continue;
+
+                    // Calculate Epi and create the states for the pion and current
                     double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
                     matelem::state out(s.V, pi_irrep, Epi, 0.0, piMom, 0, -1, 0, 0, twopi_chiL, false);
                     matelem::state cur(s.V, qTuples[k].irrep, s.E - Epi, 0.0, qTuples[k].qMom3, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, twopi_chiL, true);
+
+                    // Create the matrix element container, then calculate the kinematic factors and append them to the output container
                     matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
                     m.calcKinFactors();
                     // Append m.kFactors to kFactors using m.getKinFactors()
@@ -156,8 +163,7 @@ namespace kinFactors {
                     kFactors.insert(kFactors.end(), kF.begin(), kF.end());
                     // Append m.outstring to outStrings using m.getOutStrings()
                     std::vector<std::string> oS = m.getOutStrings();
-                    outStrings.insert(outStrings.end(), oS.begin(), oS.end());                    
-                    // m.writeKinFactors(fout);
+                    outStrings.insert(outStrings.end(), oS.begin(), oS.end());
                 }
             }
             // sort kFactors and outStrings by Q_sq
@@ -212,6 +218,22 @@ namespace kinFactors {
             }
         }
         return qTuples;
+    }
+
+    // Given a "qTuple", expand into superposition of helicity states with coeff basics::subductHelicity
+    std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momstr, std::string irrep, int irrepRow, int spin) {
+        std::vector<std::pair<cd, int>> coeffANDhelicities;
+        if (spin == 0) {
+            coeffANDhelicities.push_back(std::pair(1.0, 0));
+        }
+        else if (spin == 1) {
+            for (int hel = -1; hel < 2; hel++) { // Iterate over possible helicities, calculate subduction coeffs, add to stack.
+                double val = basics::subductHelicity(etaTilde, irrep, momstr, hel, irrepRow);
+                coeffANDhelicities.push_back(std::pair(val, hel));
+            }
+        }
+        else throw std::string("Spin > 1 in Data::getHelStates()\n ");
+        return coeffANDhelicities;
     }
 
     // Another helper function to declutter Data::outputKinematics()

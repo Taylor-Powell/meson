@@ -5,6 +5,7 @@
 #include <string>
 #include <cmath>
 #include <complex>
+#include <numbers>
 #include "generic_funcs.h"
 
 namespace {

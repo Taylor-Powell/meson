@@ -44,6 +44,7 @@ namespace kinFactors {
 
             // Convenience functions for outputKinematics
             std::vector<qTuple> getqTuples(const basics::vec2D<int> qMomList);
+            std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momstr, std::string irrep, int irrepRow, int spin);
             std::string getPiParamString(const std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V);
     };
 }

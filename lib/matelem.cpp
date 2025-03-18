@@ -57,11 +57,11 @@ namespace matelem {
                     std::string out  = "p_b1=";
                     out += std::to_string(init[i].mom3_i[0]) + std::to_string(init[i].mom3_i[1]) + std::to_string(init[i].mom3_i[2]) + " q=";
                     out += std::to_string(cur[j].mom3_i[0]) + std::to_string(cur[j].mom3_i[1]) + std::to_string(cur[j].mom3_i[2]) + " irrep=";
-                    out += cur[j].irrep + " row=" + std::to_string(cur[j].irrepRow) + " Jz=" + std::to_string(cur[j].spinZ) + " ";
+                    out += cur[j].irrep + " row=" + std::to_string(cur[j].irrepRow) + " ";
                     cd Qsq = getQsq(init[i], fin[k]);
-                    out += "Qsq=" + std::to_string(Qsq.real()) + "+" + std::to_string(Qsq.imag()) + "i ";
-                    out += " E1=" + std::to_string(kin[0].real()) + "+" + std::to_string(kin[0].imag()) + "i ";
-                    out += " C1=" + std::to_string(kin[1].real()) + "+" + std::to_string(kin[1].imag()) + "i";
+                    out += "Qsq=" + std::to_string(Qsq.real()) + " ";
+                    out += " E1=(" + std::to_string(kin[0].real()) + ", " + std::to_string(kin[0].imag()) + ") ";
+                    out += " C1=(" + std::to_string(kin[1].real()) + ", " + std::to_string(kin[1].imag()) + ")";
                     outstring.push_back(out);
                 }
             }
@@ -70,7 +70,7 @@ namespace matelem {
 
     cd matelem::getQsq(state& in, state& out) {
         bool print = false;
-        #if 1
+        #if 0
         print = true;
         #endif
         
