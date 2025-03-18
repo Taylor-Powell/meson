@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     try {        
         kinFactors::Data d(argv[1]);
         // d.printParams();
-        // d.outputKinematics(argv[2], qMomList);
+        d.outputKinematics(qMomList);
     }
     catch (std::string s) {
         std::cout << "\n\nERROR IN PROGRAM:\n" << s << std::endl;

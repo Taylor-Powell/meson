@@ -165,6 +165,9 @@ namespace matelem {
         std::cout <<  ")\n" << std::endl;
         #endif
         //////////////////////////////////////////////////////////////////////////////////////////
+        // Calculate Qsq
+        kin.push_back(getQsq(in, out));
+
 
         // Calculate the E1 coefficient
         std::vector<cd> Ecoeff;

@@ -40,17 +40,18 @@ namespace kinFactors {
             }
             numLvls = outStates.size();
             etaTilde = parity * std::pow(-1, spin);
+            #if 0
+            printParams();
+            #endif
             
             if ((anis == 0.0) || (at_mpi == 0.0) || (numLvls == 0)) {
-                //std::cout << "Printing file parameters as read from file:\n";
-                //printParams();
                 std::string errormsg = "One or more variables not initialized in ";
                 errormsg += __func__;
                 throw errormsg;
             }
 
             // Test outputKinematics with first line of .txt file
-            #if 1
+            #if 0
 
             // Verbose output
             bool printSteps = false;
@@ -121,65 +122,56 @@ namespace kinFactors {
         }
     }
 
-    void Data::outputKinematics(const std::string outfile, const basics::vec2D<int> qMomList) {
-        std::ofstream out(outfile);
-        // matelem::state s;
-        // basics::vec2D<int> pMomList;
-        // std::vector<qTuple> qTuples;
-        // std::vector<int> piMom;
-        // int index;
+    void Data::outputKinematics(const basics::vec2D<int> qMomList) {
+        for (int i = 0; i < outStates.size(); i++) {
+            outState s = outStates[i];
+            std::ofstream fout(s.outfile);
+            double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
+            std::vector<int> mom3;
+            for (int i = 0; i < s.momstr.size(); i++) {
+                mom3.push_back(s.momstr[i] - '0');
+            }
+            if (!basics::check3Mom(mom3)) continue;
+            basics::vec2D<int> pMomList = basics::getMomPerms(s.momstr);
+            for (int j = 0; j < pMomList.size(); j++) {
+                if (!basics::check3Mom(pMomList[j])) continue;
+                matelem::state in(s.V, s.irrep, s.E, s.Eerr, pMomList[j], spin, parity, 0, 0, twopi_chiL, false);
+                std::vector<qTuple> qTuples = getqTuples(qMomList);
 
-        // if (!out) {
-        //     std::string errormsg = "Failed to open file in ";
-        //     errormsg += __func__;
-        //     throw errormsg;
-        // }
-        // // Loop over lines in input .txt file for b1
-        // for (int i = 0; i < outStates.size(); i++) {
-        //     s = outStates[i];
-
-        //     pMomList = basics::getMomPerms(s.momstr);
-        //     // Loop over pMomList for b1 meson
-        //     for (int j = 0; j < pMomList.size(); j++) {
-        //         // Initialize the state for the b1 meson
-        //         // Hardcoding Jz=0 and the irrep is 1-dimensional
-        //         matelem::state in(s.params, pMomList[j], anis, spin, parity, 0, 0, false);
-
-        //         // Loop over qMomList to create unique qTuples
-        //         qTuples = getqTuples(qMomList);
-        //         for (int k = 0; k < qTuples.size(); k++) {
-        //             // Create the parameter string for the current. 
-        //             // I don't care about E and Eerr for now, so its hard-coded to 0.0
-        //             std::string cur_param = std::to_string(s.V) + " " + qTuples[k].momStr + " " + qTuples[k].irrep + " 0.0 0.0";
-
-        //             // Initialize the state for the current
-        //             // Hardcoding mass=0 and J^P=1^-
-        //             matelem::state cur(cur_param, qTuples[k].qMom3, anis, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, true);
-
-        //             // Fix the pion state for the current qMom
-        //             for (int idx = 0; idx < 3; idx++) {
-        //                 piMom.push_back(pMomList[j][idx] - qTuples[k].qMom3[idx]);
-        //             }
-
-        //             // Create the parameter string for the pion with helper function
-        //             std::string pi_param = getPiParamString(piMom, anis, at_mpi, s.twopi_chiL, s.V);
-                    
-        //             // Initialize the state for the pion
-        //             // Hardcoding JP=0-, helicity=0 and the irrep is 1-dimensional
-        //             matelem::state out(pi_param, piMom, anis, 0, -1, 0, 0, false);
-
-        //             // Create the matelem object and push it to the queue
-        //             matelem::matelem m(in, cur, out);
-        //             m.subductAll(false);
-        //             m.calcKinFactors();
-        //             std::complex<double> Qsq = m.getQsq(in, out);
-
-        //             // Clear piMom for next iteration
-        //             piMom.clear();
-        //         }
-        //     }
-        // }        
-        out.close();
+                for(int k = 0; k < qTuples.size(); k++) {
+                    std::vector<int> piMom;
+                    std::string pi_irrep = "A1";
+                    for (int ii = 0; ii < 3; ii++) {
+                        piMom.push_back(pMomList[j][ii] - qTuples[k].qMom3[ii]);
+                        if (piMom[ii] != 0) pi_irrep = "A2";
+                    }
+                    if (!basics::check3Mom(piMom)) continue;
+                    double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
+                    matelem::state out(s.V, pi_irrep, Epi, 0.0, piMom, 0, -1, 0, 0, twopi_chiL, false);
+                    matelem::state cur(s.V, qTuples[k].irrep, s.E - Epi, 0.0, qTuples[k].qMom3, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, twopi_chiL, true);
+                    matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
+                    m.calcKinFactors();
+                    // Append m.kFactors to kFactors using m.getKinFactors()
+                    std::vector<std::vector<cd>> kF = m.getKinFactors();
+                    kFactors.insert(kFactors.end(), kF.begin(), kF.end());
+                    // Append m.outstring to outStrings using m.getOutStrings()
+                    std::vector<std::string> oS = m.getOutStrings();
+                    outStrings.insert(outStrings.end(), oS.begin(), oS.end());                    
+                    // m.writeKinFactors(fout);
+                }
+            }
+            // sort kFactors and outStrings by Q_sq
+            std::vector<std::pair<double, int>> QsqIndex;
+            for (int i = 0; i < kFactors.size(); i++) {
+                QsqIndex.push_back(std::make_pair(kFactors[i][0].real(), i));
+            }
+            std::sort(QsqIndex.begin(), QsqIndex.end());
+            for (int i = 0; i < QsqIndex.size(); i++) {
+                int index = QsqIndex[i].second;
+                fout << outStrings[index] << std::endl;
+            }
+            fout.close();
+        }
     }
 
     // Kind of a silly function... But it gets the job done.

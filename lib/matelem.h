@@ -67,6 +67,8 @@ namespace matelem {
             void expandAllHelOps();
             void subductAll(bool isHelState = true);
             void calcKinFactors();
+            std::vector<std::vector<cd>> getKinFactors() { return kFactors; }
+            std::vector<std::string> getOutStrings() { return outstring; }
             void writeKinFactors(std::ofstream& fout) {
                 for (int i = 0; i < outstring.size(); i++) {
                     fout << outstring[i] << std::endl;

@@ -28,7 +28,7 @@ namespace kinFactors {
             // Functions defined in read_Ecm_dat.cpp
             void readData(const std::string filename);
             void printParams();
-            void outputKinematics(const std::string outfile, const basics::vec2D<int> qMomList);
+            void outputKinematics(const basics::vec2D<int> qMomList);
 
         private:
             struct outState {
@@ -37,6 +37,8 @@ namespace kinFactors {
                 double E, Eerr;
             };
             std::vector<outState> outStates;
+            std::vector<std::string> outStrings;
+            std::vector<std::vector<cd>> kFactors;
             double anis, at_mpi, at_inv;
             int numLvls, parity, spin, etaTilde;
 

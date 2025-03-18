@@ -23,7 +23,7 @@ namespace rotations {
         else if (mom_sq == 1) return "001";
         else if (mom_sq == 2) return "011";
         else if (mom_sq == 3) return "111";
-        else if (mom_sq == 4) return "002"; 
+        else if (mom_sq == 4) return "001"; 
         else if (mom_sq == 5) return "012";
         else if (mom_sq == 6) return "112";
         else throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " not recognized in rotations::getSym.\n");
@@ -40,7 +40,7 @@ namespace rotations {
                         return sym_angles[i][j];
                     }
                 }
-                throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " for symmetry " + sym + " not recognized in rotations::getRotAngles.\n");
+                // throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " for symmetry " + sym + " not recognized in rotations::getRotAngles.\n");
             }          
         }
         throw std::string("Symmetry " + sym + " not recognized in rotations::getRotAngles.\n");
