@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <string>
+#include <vector>
 #include "generic_funcs.h"
 #include "matelem.h"
 
@@ -30,7 +31,12 @@ namespace kinFactors {
             void outputKinematics(const std::string outfile, const basics::vec2D<int> qMomList);
 
         private:
-            std::vector<matelem::state> outStates;
+            struct outState {
+                int V;
+                std::string momstr, irrep, params, outfile;
+                double E, Eerr;
+            };
+            std::vector<outState> outStates;
             double anis, at_mpi, at_inv;
             int numLvls, parity, spin, etaTilde;
 

@@ -29,20 +29,20 @@ namespace matelem {
         @param E: Energy
         @param Eerr: Error in the energy
         @param threemom: Integer vector of the three-momentum
-        @param anis: Anisotropy of the lattice
         @param J: Spin
         @param P: Parity
         @param row: Row of the irrep
         @param Jz: Spin projection 
+        @param twopi_chiL: 2 * pi / (anis * V)
         @param current: Whether the state is a current
         */ 
-        state(int V, std::string momstr, std::string irrep, double E, double Eerr, std::vector<int> threemom, double anis, int J, int P, int row, int Jz, bool current);
+        state(int V, std::string irrep, double E, double Eerr, std::vector<int> threemom, int J, int P, int row, int Jz, double twopi_chiL, bool current);
         state() {}
-        std::vector<int> mom;
-        std::vector<cd> fourMom, polVec;
+        std::vector<int> mom3_i;
+        std::vector<cd> mom4, polVec;
         std::string params, momstr, irrep, sym;
-        int irrepRow, helicity, spin, spinZ, parity, etaTilde, V;
-        double E, Eerr, twopi_chiL, mState;
+        int V, irrepRow, helicity, spin, spinZ, parity, etaTilde;
+        double E, Eerr, mState;
         cd coeff;
     };
 
@@ -67,14 +67,25 @@ namespace matelem {
             void expandAllHelOps();
             void subductAll(bool isHelState = true);
             void calcKinFactors();
+            void writeKinFactors(std::ofstream& fout) {
+                for (int i = 0; i < outstring.size(); i++) {
+                    fout << outstring[i] << std::endl;
+                }
+            }
             cd getQsq(state& in, state& out);
+            // Destructor
             ~matelem() {}
-        private:
+
             // Variables
             double anis, twopi_chiL;
-            int V;
+            int V;            
+
+        private:
+            // Variables
             std::vector<state> init, cur, fin;
             std::vector<std::vector<cd>> kFactors;
+            std::vector<std::vector<double>> outVals;
+            std::vector<std::string> outstring;
 
             // Forward Declarations
             void ExpandHelOps(std::vector<state>& s);

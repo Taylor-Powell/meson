@@ -49,6 +49,9 @@ namespace rotations {
     // Convenience function
     std::string getMomStr(const std::vector<int> mom);
 
+    // Convenience function
+    //std::string getIrrep(const std::string sym, const std::vector<int> mom);
+
     // Get the rotation angles for a given symmetry and momentum
     std::vector<double> getRotAngles(const std::string sym, const std::vector<int> mom);
 

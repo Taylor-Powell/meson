@@ -40,7 +40,7 @@ namespace rotations {
                         return sym_angles[i][j];
                     }
                 }
-                throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " for symmetry " + sym + " not recognized in rotations::getSymAngles.\n");
+                throw std::string("Momentum " + std::to_string(mom[0]) + std::to_string(mom[1]) + std::to_string(mom[2]) + " for symmetry " + sym + " not recognized in rotations::getRotAngles.\n");
             }          
         }
         throw std::string("Symmetry " + sym + " not recognized in rotations::getRotAngles.\n");
@@ -59,10 +59,12 @@ namespace rotations {
                 return;
             }
         }
-        throw std::string("Symmetry " + sym + " not recognized in rotations::rotPolVec_init.\n");
+        if (sym == "full") return;
+        else throw std::string("Symmetry " + sym + " not recognized in rotations::rotPolVec_init.\n");
     }
 
     void rotPolVec(std::vector<cd>& polVec, const std::string sym, const std::vector<int> mom) {
+        //std::cout << "rotPolVec called with sym = " << sym << ", mom = " << mom[0] << mom[1] << mom[2] << std::endl;
         std::vector<double> angles = getRotAngles(sym, mom);
         std::vector<cd> polVec_Spatial(polVec.begin() + 1, polVec.end());
         polVec_Spatial = basics::rotVec(polVec_Spatial, angles[0], angles[1], angles[2]);
@@ -72,13 +74,13 @@ namespace rotations {
         }
     }    
 
-    std::vector<cd> getPolz4(double E, double mom_sq, int helicity, bool current) {
+    std::vector<cd> getPolz4(double E, double mom3_sq, int helicity, bool current) {
         std::vector<cd> polz(4, cd(0,0));
         if (helicity == 0) {
             if (current) polz = {cd(0,0), cd(0,0), cd(0,0), cd(1,0)};
             else {
-                double m = std::sqrt(std::pow(E, 2) - mom_sq);
-                double p = std::sqrt(mom_sq);
+                double m = std::sqrt(std::pow(E, 2) - mom3_sq);
+                double p = std::sqrt(mom3_sq);
                 polz = {cd(p/m, 0), cd(0, 0), cd(0, 0), cd(E/m, 0)};
             }
         }
@@ -94,15 +96,15 @@ namespace rotations {
         return polz;
     }
 
-    std::vector<cd> getPol4_hel(double E, double mom_sq, const std::vector<int> mom3, int helicity, const std::string sym, bool current) {
-        std::vector<cd> polz = getPolz4(E, mom_sq, helicity, current);
+    std::vector<cd> getPol4_hel(double E, double mom3_sq, const std::vector<int> mom3, int helicity, const std::string sym, bool current) {
+        std::vector<cd> polz = getPolz4(E, mom3_sq, helicity, current);
         rotPolVec_init(polz, sym);
         rotPolVec(polz, sym, mom3);
         return polz;
     }
 
-    std::vector<cd> getPol4_Jz(double E, double mom_sq, const std::vector<int> mom3, int Jz, const std::string sym, bool current) {
-        std::vector<cd> polz = getPolz4(E, mom_sq, Jz, current);
+    std::vector<cd> getPol4_Jz(double E, double mom3_sq, const std::vector<int> mom3, int Jz, const std::string sym, bool current) {
+        std::vector<cd> polz = getPolz4(E, mom3_sq, Jz, current);
         rotPolVec_init(polz, sym);
         rotPolVec(polz, sym, mom3);
         return polz;

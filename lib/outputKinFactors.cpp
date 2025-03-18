@@ -6,7 +6,7 @@
 namespace kinFactors {
     void Data::readData(const std::string filename) {
         std::ifstream file (filename);
-        matelem::state s;
+        outState s;
         if (!file) {
             std::string errormsg = "Failed to open file in ";
             errormsg += __func__;
@@ -30,8 +30,10 @@ namespace kinFactors {
                     var.erase(0, 1); // Remove "V" from string
                     std::stringstream ss(var);
                     ss >> s.V >> s.momstr >> s.irrep >> s.E >> s.Eerr;
-                    s.twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
                     s.params = var;
+                    s.outfile = "data/kinFactors_V_" + std::to_string(s.V);
+                    s.outfile += "_E_" + std::to_string(s.E).substr(0, std::to_string(s.E).find('.') + 7);
+                    s.outfile += "_b1mom_" + s.momstr + ".dat";
                     outStates.push_back(s);
                 }
                 else continue;
@@ -47,48 +49,52 @@ namespace kinFactors {
                 throw errormsg;
             }
 
-            #if 1
             // Test outputKinematics with first line of .txt file
+            #if 1
+
+            // Verbose output
+            bool printSteps = false;
+            #if 0
+            printSteps = true;
+            #endif
+
             basics::vec2D<int> qMomList = {{0,0,1}};
-            std::string outfile = "kinFactors_Test.txt";
-            std::ofstream out(outfile);
-            matelem::state s = outStates[0];
+            outState s = outStates[0];
+            std::ofstream fout(s.outfile);
             double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
             std::cout << "Param string = " << s.params << std::endl;
-            std::cout << "Making in state..." << std::endl;
-            matelem::state in(s.V, s.momstr, s.irrep, s.E, s.Eerr, s.mom, anis, spin, parity, 0, 0, false);
+            std::vector<int> mom3;
+            for (int i = 0; i < s.momstr.size(); i++) {
+                mom3.push_back(s.momstr[i] - '0');
+            }
+            if (printSteps) std::cout << "Making in state..." << std::endl;
+            matelem::state in(s.V, s.irrep, s.E, s.Eerr, mom3, spin, parity, 0, 0, twopi_chiL, false);
+
+
+            if (printSteps) std::cout << "Making out state..." << std::endl;
             std::vector<qTuple> qTuples = getqTuples(qMomList);
             std::vector<int> piMom;
+            std::string pi_irrep = "A1";
+            for (int i = 0; i < 3; i++) {
+                piMom.push_back(mom3[i] - qTuples[0].qMom3[i]);
+                if (piMom[i] != 0) pi_irrep = "A2";
+            }
+            double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
+            matelem::state out(s.V, pi_irrep, Epi, 0.0, piMom, 0, -1, 0, 0, twopi_chiL, false);
 
-
-            // basics::vec2D<int> pMomList = basics::getMomPerms(s.momstr);
-            // std::vector<qTuple> qTuples = getqTuples(qMomList);
-            // std::vector<int> piMom;
-            // for (int j = 0; j < pMomList.size(); j++) {
-            //     std::cout << "Making in state" << std::endl;
-            //     matelem::state in(s.V, s.momstr, s.irrep, s.E, s.Eerr, pMomList[j], anis, spin, parity, 0, 0, false);
-            //     for (int k = 0; k < qTuples.size(); k++) {
-            //         std::cout << "Making current state" << std::endl;
-            //         matelem::state cur(s.V, qTuples[k].momStr, qTuples[k].irrep, 0.0, 0.0, qTuples[k].qMom3, anis, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, true);
-            //         if (!basics::check3Mom(piMom)) {
-            //             std::cout << "Skipping to next pMom\n" << std::endl;
-            //             piMom.clear();
-            //             break;
-            //         }
-            //         std::cout << "Making out state" << std::endl;
-            //         double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
-
-            //         matelem::state out(s.V, rotations::getMomStr(piMom), basics::getIrreps(etaTilde, s.momstr, -1)[0], Epi, 0.0, piMom, anis, 0, -1, 0, 0, false);
-
-
-            //         matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
-            //         std::cout << "Qsq = " << m.getQsq(in, out) << std::endl;
-            //         m.calcKinFactors();
-            //         std::cout << "\n\n";
-            //         piMom.clear();
-            //     }
-            // }
-            out.close();
+            
+            if (printSteps) std::cout << "Making current state..." << std::endl;
+            for (int i = 0; i < qTuples.size(); i++) {
+                matelem::state cur(s.V, qTuples[i].irrep, s.E - Epi, 0.0, qTuples[i].qMom3, 1, -1, qTuples[i].irrepRow, qTuples[i].helicity, twopi_chiL, true);
+                if (printSteps) std::cout << "Making matelem..." << std::endl;
+                matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
+                if (printSteps) std::cout << "Calculating kinematic factors..." << std::endl;
+                m.calcKinFactors();
+                if (printSteps) std::cout << "Writing kinematic factors..." << std::endl;
+                m.writeKinFactors(fout);
+            }
+            
+            fout.close();
 
 
 
@@ -105,7 +111,7 @@ namespace kinFactors {
         std::cout << "numLvls = " << numLvls << std::endl;
         std::cout << std::left;
         for (int i = 0; i < numLvls; i++) {
-            matelem::state s = outStates[i];
+            outState s = outStates[i];
             std::cout << "V = " << std::setw(5) << s.V 
                       << "E = " << std::setw(10) << s.E 
                       << "+/- " << std::setw(11) << s.Eerr
