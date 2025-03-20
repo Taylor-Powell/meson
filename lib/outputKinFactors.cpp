@@ -29,7 +29,10 @@ namespace kinFactors {
                 else if ((var[0] == 'V') && (var[1] != ' ')) {
                     var.erase(0, 1); // Remove "V" from string
                     std::stringstream ss(var);
-                    ss >> s.V >> s.momstr >> s.irrep >> s.E >> s.Eerr;
+                    std::string momstr;
+                    ss >> s.V >> momstr >> s.irrep >> s.E >> s.Eerr;
+                    s.mom3_i = rotations::getMom3_i(momstr);
+                    s.momType = rotations::getMomType(s.mom3_i);
                     s.params = var;
                     s.outfile = "data/kinFactors_V_" + std::to_string(s.V);
                     s.outfile += "_E_" + std::to_string(s.E).substr(0, std::to_string(s.E).find('.') + 7);
@@ -129,12 +132,8 @@ namespace kinFactors {
             std::vector<qTuple> qTuples = getqTuples(qMomList);
 
             // Make the 3-momentum base vector, check if it's <211, and get the momentum permutations
-            std::vector<int> mom3;
-            for (int i = 0; i < s.momstr.size(); i++) {
-                mom3.push_back(s.momstr[i] - '0');
-            }
-            if (!basics::check3Mom(mom3)) continue;
-            basics::vec2D<int> pMomList = basics::getMomPerms(s.momstr);
+            if (!basics::check3Mom(s.mom3_i)) continue;
+            basics::vec2D<int> pMomList = basics::getMomPerms(s.mom3_i);
 
             // Iterate over the momentum permutations
             for (int j = 0; j < pMomList.size(); j++) {
@@ -145,7 +144,7 @@ namespace kinFactors {
                     std::vector<int> piMom;
                     std::string pi_irrep = "A1";
                     for (int ii = 0; ii < 3; ii++) {
-                        piMom.push_back(pMomList[j][ii] - qTuples[k].qMom3[ii]);
+                        piMom.push_back(pMomList[j][ii] - qTuples[k].mom3_i[ii]);
                         if (piMom[ii] != 0) pi_irrep = "A2";
                     }
                     if (!basics::check3Mom(piMom)) continue;
@@ -153,6 +152,8 @@ namespace kinFactors {
                     // Calculate Epi and create the states for the pion and current
                     double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
                     matelem::state out(s.V, pi_irrep, Epi, 0.0, piMom, 0, -1, 0, 0, twopi_chiL, false);
+                    
+                    #if 0 // Gotta fix the current state creation
                     matelem::state cur(s.V, qTuples[k].irrep, s.E - Epi, 0.0, qTuples[k].qMom3, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, twopi_chiL, true);
 
                     // Create the matrix element container, then calculate the kinematic factors and append them to the output container
@@ -164,6 +165,7 @@ namespace kinFactors {
                     // Append m.outstring to outStrings using m.getOutStrings()
                     std::vector<std::string> oS = m.getOutStrings();
                     outStrings.insert(outStrings.end(), oS.begin(), oS.end());
+                    #endif
                 }
             }
             // sort kFactors and outStrings by Q_sq
@@ -181,27 +183,46 @@ namespace kinFactors {
     }
 
     // Kind of a silly function... But it gets the job done.
+    // "000" -> T1m rows 0-2
+    // "001" or "002" -> E2 rows 0-1
+    // "011" -> B1 row 0, B2 row 0
+    // "111" -> E2 rows 0-1
+    // "012" -> A1 row 0, A2 row 0
     std::vector<qTuple> Data::getqTuples(const basics::vec2D<int> qMomList) {
         std::vector<qTuple> qTuples;
         for (int k = 0; k < qMomList.size(); k++) {
             qTuple q;
-            q.qMom3 = qMomList[k];
-            q.momStr = std::to_string(qMomList[k][0]) + std::to_string(qMomList[k][1]) + std::to_string(qMomList[k][2]);
+            q.mom3_i = qMomList[k];
+            q.momType = rotations::getMomType(q.mom3_i);
             for (int hel = -1; hel <= 1; hel++) {
-                q.helicity = hel;
-                if (q.momStr == "000") {
+                if (q.momType == "000") {
                     q.irrep = "T1m";
                     for (int row = 0; row < 3; row++) {
                         q.irrepRow = row;
                         qTuples.push_back(q);
                     }
                 }
-                else if (hel == 0) {
+                else {
                     q.irrep = "A2";
                     q.irrepRow = 0;
                     qTuples.push_back(q);
                 }
-                else if (q.momStr == "011") {
+                if (q.momType == "00n") {
+                    q.irrep = "E2";
+                    for (int row = 0; row < 2; row++) {
+                        q.irrepRow = row;
+                        qTuples.push_back(q);
+                    }
+                }
+                else if (q.momType == "0mn") {
+                    q.irrep = "A1";
+                    q.irrepRow = 0;
+                    qTuples.push_back(q);
+                    q.irrep = "A2";
+                    qTuples.push_back(q);
+                }
+                
+                if (q.momType == "0nn") {
                     q.irrepRow = 0;
                     q.irrep = "B1";
                     qTuples.push_back(q);
@@ -221,14 +242,14 @@ namespace kinFactors {
     }
 
     // Given a "qTuple", expand into superposition of helicity states with coeff basics::subductHelicity
-    std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momstr, std::string irrep, int irrepRow, int spin) {
+    std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin) {
         std::vector<std::pair<cd, int>> coeffANDhelicities;
         if (spin == 0) {
             coeffANDhelicities.push_back(std::pair(1.0, 0));
         }
         else if (spin == 1) {
             for (int hel = -1; hel < 2; hel++) { // Iterate over possible helicities, calculate subduction coeffs, add to stack.
-                double val = basics::subductHelicity(etaTilde, irrep, momstr, hel, irrepRow);
+                double val = basics::subductHelicity(etaTilde, irrep, momType, hel, irrepRow);
                 coeffANDhelicities.push_back(std::pair(val, hel));
             }
         }
@@ -238,7 +259,7 @@ namespace kinFactors {
 
     // Another helper function to declutter Data::outputKinematics()
     std::string Data::getPiParamString(const std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V) {
-        std::string pi_param = std::to_string(V) + " " + rotations::getMomStr(piMom);
+        std::string pi_param = std::to_string(V) + " " + rotations::getMomType(piMom);
         if (piMom[0] == 0 && piMom[1] == 0 && piMom[2] == 0) {
             pi_param += " A1 ";
         }

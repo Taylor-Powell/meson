@@ -9,9 +9,9 @@
 
 namespace kinFactors {
     struct qTuple {
-        std::vector<int> qMom3;
-        std::string irrep, momStr;
-        int irrepRow, helicity;
+        std::vector<int> mom3_i;
+        std::string irrep, momType;
+        int irrepRow;
         double Q_sq;
     };
     
@@ -33,8 +33,9 @@ namespace kinFactors {
         private:
             struct outState {
                 int V;
-                std::string momstr, irrep, params, outfile;
+                std::string momstr, momType, irrep, params, outfile;
                 double E, Eerr;
+                std::vector<int> mom3_i;
             };
             std::vector<outState> outStates;
             std::vector<std::string> outStrings;
@@ -44,8 +45,8 @@ namespace kinFactors {
 
             // Convenience functions for outputKinematics
             std::vector<qTuple> getqTuples(const basics::vec2D<int> qMomList);
-            std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momstr, std::string irrep, int irrepRow, int spin);
-            std::string getPiParamString(const std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V);
+            std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin);
+            std::string getPiParamString(const std::vector<int> mom3_i, double anis, double at_mpi, double twopi_chiL, int V);
     };
 }
 #endif

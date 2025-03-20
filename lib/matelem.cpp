@@ -9,7 +9,7 @@
 namespace matelem {
     state::state(int V, std::string irrep, double E, double Eerr, std::vector<int> mom3_i, int J, int P, int row, int Jz, double twopi_chiL, bool current) 
         : V(V), irrep(irrep), E(E), Eerr(Eerr), mom3_i(mom3_i), spin(J), spinZ(Jz), parity(P), irrepRow(row) {        
-        momstr = rotations::getMomStr(mom3_i);
+        momType = rotations::getMomType(mom3_i);
         std::vector<double> mom3 = {mom3_i[0] * twopi_chiL, mom3_i[1] * twopi_chiL, mom3_i[2] * twopi_chiL};
         mom4 = {E, mom3[0], mom3[1], mom3[2]};
         double mom3_sq = basics::dot(mom3, mom3);
@@ -17,7 +17,7 @@ namespace matelem {
         else mState = std::sqrt((basics::fourDot(mom4, mom4)).real()); 
         coeff = 1.0;
         etaTilde = parity * std::pow(-1, spin);
-        sym = rotations::getSym(momstr);
+        sym = rotations::getSym(momType);
         polVec = rotations::getPol4_Jz(E, mom3_sq, mom3_i, Jz, sym, current);
     }
 
@@ -87,18 +87,14 @@ namespace matelem {
     void matelem::subductHelicityState(std::vector<state>& s) {
         if (s.size() != 1) throw std::string("subductState called with vector of size != 1.\n");
         if (s[0].etaTilde == 0) s[0].etaTilde = s[0].parity * std::pow(-1, s[0].spin);
-        if (s[0].helicity == 0) s[0].coeff *= basics::subductHelicity(s[0].etaTilde, s[0].irrep, s[0].momstr, s[0].helicity, s[0].irrepRow);
+        if (s[0].helicity == 0) s[0].coeff *= basics::subductHelicity(s[0].etaTilde, s[0].irrep, s[0].momType, s[0].helicity, s[0].irrepRow);
         else {
-            s[0].coeff *= basics::subductHelicity(s[0].etaTilde, s[0].irrep, s[0].momstr, s[0].helicity, s[0].irrepRow);
-            s.push_back(s[0]);
-            s[1].helicity = -s[1].helicity;
-            s[1].coeff *= basics::subductHelicity(s[1].etaTilde, s[1].irrep, s[1].momstr, s[1].helicity, s[1].irrepRow);
+            s[0].coeff *= basics::subductHelicity(s[0].etaTilde, s[0].irrep, s[0].momType, s[0].helicity, s[0].irrepRow);
+            state sTemp = s[0];
+            sTemp.helicity = -sTemp.helicity;
+            sTemp.coeff *= basics::subductHelicity(sTemp.etaTilde, sTemp.irrep, sTemp.momType, sTemp.helicity, sTemp.irrepRow);
+            s.push_back(sTemp);
         }
-    }
-
-    void matelem::subductJzState(std::vector<state>& s) {
-        if (s.size() != 1) throw std::string("subductState called with vector of size != 1.\n");
-        
     }
     
     void matelem::ExpandHelOps(std::vector<state>& s) {
@@ -109,7 +105,7 @@ namespace matelem {
             std::vector<state> newStates;
             for (int i = 0; i <= 2 * s[i].spin + 1; i++) {
                 sTemp = s[i];
-                angles = rotations::getRotAngles(sTemp.momstr, sTemp.mom3_i);
+                angles = rotations::getRotAngles(sTemp.sym, sTemp.mom3_i);
                 sTemp.spinZ = -s[i].spin + i;
                 sTemp.coeff *= std::conj(WignerD::Wigner_D(s[i].spin, s[i].spinZ, s[i].helicity, angles[0], angles[1], angles[2]));
                 newStates.push_back(sTemp);

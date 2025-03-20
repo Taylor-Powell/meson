@@ -36,11 +36,11 @@ namespace matelem {
         @param twopi_chiL: 2 * pi / (anis * V)
         @param current: Whether the state is a current
         */ 
-        state(int V, std::string irrep, double E, double Eerr, std::vector<int> threemom, int J, int P, int row, int Jz, double twopi_chiL, bool current);
+        state(int V, std::string irrep, double E, double Eerr, std::vector<int> mom3_i, int J, int P, int row, int Jz, double twopi_chiL, bool current);
         state() {}
         std::vector<int> mom3_i;
         std::vector<cd> mom4, polVec;
-        std::string params, momstr, irrep, sym;
+        std::string params, momType, irrep, sym;
         int V, irrepRow, helicity, spin, spinZ, parity, etaTilde;
         double E, Eerr, mState;
         cd coeff;

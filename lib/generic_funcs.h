@@ -131,12 +131,12 @@ namespace basics {
     }
 
     // Forward declarations
-    vec2D<int> getMomPerms(const std::string mom);
-    std::vector<std::string> getIrreps(int etaTilde, const std::string mom, int helicity);
-    double subductHelicity(int etaTilde, const std::string irrep, const std::string mom, int helicity, int irrepRow);
+    vec2D<int> getMomPerms(const std::vector<int> mom3_i);
+    vec2D<int> getMomPerms(const std::string mom3_i);
+    std::vector<std::string> getIrreps(int etaTilde, const std::string momType, int helicity);
+    double subductHelicity(int etaTilde, const std::string irrep, const std::string momType, int helicity, int irrepRow);
     /** Simple function to check if momentum is <= 211 in all permutations */
-    bool check3Mom(const std::vector<int> mom3);
+    bool check3Mom(const std::vector<int> mom3_i);
 }
-
 
 #endif
