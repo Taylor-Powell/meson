@@ -1,6 +1,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <cctype>
 #include "generic_funcs.h"
 
 namespace basics {
@@ -71,71 +72,82 @@ namespace basics {
         return perms;
     }
 
-    // std::vector<std::string> getIrreps(int etaTilde, const std::string mom, int helicity) {
-    //     std::vector<std::string> irrepList;
-    //     if ((helicity == 0) && (etaTilde == 1)) irrepList.push_back("A1");
-    //     else if (helicity == 0) irrepList.push_back("A2");
-    //     else if (mom == "000") {
-    //         if (etaTilde == 1) irrepList.push_back("T1p");
-    //         else irrepList.push_back("T2m");
-    //     }
-    //     else if ((mom == "001") || (mom == "002")) irrepList.push_back("E2");
-    //     else if (mom == "011") {
-    //         irrepList.push_back("B1");
-    //         irrepList.push_back("B2");
-    //     }
-    //     else if (mom == "111") irrepList.push_back("E2");        
-    //     else if ((mom == "210") || (mom == "211")) {
-    //         irrepList.push_back("A1");
-    //         irrepList.push_back("A2");
-    //     }
-    //     return irrepList;
-    // }
+    std::vector<std::string> getIrreps(const basics::vec2D<int> mom3_i_List, int parity, int spin) {
+        // Sanity checks
+        if (spin > 1) throw std::string("Spin > 1 in Data::getIrreps()\n");
+        else if (spin < 0) throw std::string("Spin < 0 in Data::getIrreps()\n");
+        else if (parity != 1 && parity != -1) throw std::string("Invalid parity in Data::getIrreps()\n");
 
-    std::vector<std::string> getIrreps(int etaTilde, const std::string momType, int helicity) {
-        std::vector<std::string> irrepList;
-        if ((helicity == 0) && (etaTilde == 1)) irrepList.push_back("A1");
-        else if (helicity == 0) irrepList.push_back("A2");
-        else if (momType == "000") {
-            if (etaTilde == 1) irrepList.push_back("T1p");
-            else irrepList.push_back("T1m");
+        std::vector<std::string> irreps;
+        int etaTilde = parity * std::pow(-1, spin);
+        for (int i = 0; i < mom3_i_List.size(); i++) {
+            std::string momType = getMomType(mom3_i_List[i]);
+            if (momType == "000") {
+                if (spin == 1) {
+                    if (parity == 1) irreps.push_back("T1p");
+                    else if (parity == -1) irreps.push_back("T1m");
+                }
+                else if (spin == 0) irreps.push_back("A1");
+            }
+            else { // Catch-all for hel=0 subductions
+                if (etaTilde == 1) irreps.push_back("A1");
+                else if (etaTilde == -1) irreps.push_back("A2");
+            }
+            if (momType == "00n") {
+                irreps.push_back("E2");
+            }
+            else if (momType == "0nn") {
+                irreps.push_back("B1");
+                irreps.push_back("B2");
+            }
+            else if (momType == "nnn") {
+                irreps.push_back("E2");
+            }
+            else if (momType == "0mn") { // Covers the hel=1 subductions for "0mn" and "nnm"
+                if (etaTilde == 1) irreps.push_back("A2");
+                else if (etaTilde == -1) irreps.push_back("A1");
+            }
         }
-        else if (momType == "00n") irrepList.push_back("E2");
-        else if (momType == "0nn") {
-            irrepList.push_back("B1");
-            irrepList.push_back("B2");
-        }
-        else if (momType == "nnn") irrepList.push_back("E2");        
-        else if ((momType == "0mn") || (momType == "mnn")) {
-            irrepList.push_back("A1");
-            irrepList.push_back("A2");
-        }
-        return irrepList;
+        return irreps;
     }
 
-    // // Only written up to helicity 1 for current need.
-    // double subductHelicity(int etaTilde, const std::string irrep, const std::string momstr, int helicity, int irrepRow) {
-    //     if (helicity == 0) {
-    //         if ((etaTilde == 1) && (irrep == "A1")) return 1.0;
-    //         else if ((etaTilde == -1) && (irrep == "A2")) return 1.0;
-    //         else return 0.0;
-    //     }
-    //     if (std::abs(helicity) == 1) {
-    //         int s = 0;
-    //         if ((irrep == "E2") && ((momstr == "001") || (momstr == "111") || (momstr == "002"))) {
-    //             s = (irrepRow == 1) ? 1 : -1;
-    //         }
-    //         else if (((irrep == "B1") || (irrep == "B2")) && (momstr == "011")) {
-    //             s = (irrep == "B1") ? 1 : -1;
-    //         }
-    //         else if ((irrep == "A1") || (irrep == "A2")) {
-    //             s = (irrep == "A1") ? -1 : 1;
-    //         }
-    //         else return 0.0;
-    //         return (kDelta(helicity, 1) + s * etaTilde * kDelta(helicity, -1)) / std::sqrt(2.0);
-    //     }
-    //     return 0.0;
-    // }
+    std::vector<std::string> getIrreps(const std::vector<std::string> momTypeList, int parity, int spin) {
+        // Sanity checks
+        if (spin > 1) throw std::string("Spin > 1 in Data::getIrreps()\n");
+        else if (spin < 0) throw std::string("Spin < 0 in Data::getIrreps()\n");
+        else if (parity != 1 && parity != -1) throw std::string("Invalid parity in Data::getIrreps()\n");
+
+        std::vector<std::string> irreps;
+        int etaTilde = parity * std::pow(-1, spin);
+        for (int i = 0; i < momTypeList.size(); i++) {
+            if (momTypeList[i] == "000") {
+                if (spin == 1) {
+                    if (parity == 1) irreps.push_back("T1p");
+                    else if (parity == -1) irreps.push_back("T1m");
+                }
+                else if (spin == 0) irreps.push_back("A1");
+            }
+            else { // Catch-all for hel=0 subductions
+                if (etaTilde == 1) irreps.push_back("A1");
+                else if (etaTilde == -1) irreps.push_back("A2");
+            }
+            if (momTypeList[i] == "00n") {
+                irreps.push_back("E2");
+            }
+            else if (momTypeList[i] == "0nn") {
+                irreps.push_back("B1");
+                irreps.push_back("B2");
+            }
+            else if (momTypeList[i] == "nnn") {
+                irreps.push_back("E2");
+            }
+            else if (momTypeList[i] == "0mn") { // Covers the hel=1 subductions for "0mn" and "nnm"
+                if (etaTilde == 1) irreps.push_back("A2");
+                else if (etaTilde == -1) irreps.push_back("A1");
+            }
+        }
+        return irreps;
+    }
 
     // Only written up to helicity 1 for current need.
     double subductHelicity(int etaTilde, const std::string irrep, const std::string momType, int helicity, int irrepRow) {
@@ -171,5 +183,40 @@ namespace basics {
                 return true;
         }
         return false;
+    }
+
+    std::vector<int> getMom3_i(const std::string momStr) {
+        std::vector<int> mom3_i;
+        for (int i = 0; i < 3; i++) {
+            // if not a digit, throw an error
+            if (!std::isdigit(momStr[i])) {
+                throw std::string("Momentum " + momStr + " is not a set of integers in basics::getMom3_i.\n");
+            }
+            mom3_i.push_back(momStr[i] - '0');
+        }
+        return mom3_i;
+    }
+
+    std::string getSym(const std::string momType) {
+        if (momType == "00n") return "Dic4";
+        else if (momType == "0nn") return "Dic2";
+        else if (momType == "nnn") return "Dic3";
+        else if (momType == "0mn") return "C40mn";
+        else if (momType == "nnm") return "C4nnm";
+        else if (momType == "000") return "OhD";
+        else throw std::string("Momentum " + momType + " not recognized in basics::getSym().\n");
+    }
+
+    std::string getMomType(const std::vector<int> mom3_i) {
+        std::string sym;
+        int mom_sq = basics::dot(mom3_i, mom3_i);
+        if (mom_sq == 0) return "000";
+        else if (mom_sq == 1) return "00n";
+        else if (mom_sq == 2) return "0nn";
+        else if (mom_sq == 3) return "nnn";
+        else if (mom_sq == 4) return "00n"; 
+        else if (mom_sq == 5) return "0mn";
+        else if (mom_sq == 6) return "nnm";
+        else throw std::string("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " not recognized in basics::getMomType.\n");
     }
 }

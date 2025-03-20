@@ -31,8 +31,8 @@ namespace kinFactors {
                     std::stringstream ss(var);
                     std::string momstr;
                     ss >> s.V >> momstr >> s.irrep >> s.E >> s.Eerr;
-                    s.mom3_i = rotations::getMom3_i(momstr);
-                    s.momType = rotations::getMomType(s.mom3_i);
+                    s.mom3_i = basics::getMom3_i(momstr);
+                    s.momType = basics::getMomType(s.mom3_i);
                     s.params = var;
                     s.outfile = "data/kinFactors_V_" + std::to_string(s.V);
                     s.outfile += "_E_" + std::to_string(s.E).substr(0, std::to_string(s.E).find('.') + 7);
@@ -182,64 +182,64 @@ namespace kinFactors {
         }
     }
 
-    // Kind of a silly function... But it gets the job done.
+    // For a given current 3-momentum, expand over the possible irreps and rows
     // "000" -> T1m rows 0-2
-    // "001" or "002" -> E2 rows 0-1
-    // "011" -> B1 row 0, B2 row 0
-    // "111" -> E2 rows 0-1
-    // "012" -> A1 row 0, A2 row 0
+    // "00n" -> E2 rows 0-1
+    // "0nn" -> B1 row 0, B2 row 0
+    // "nnn" -> E2 rows 0-1
+    // "0mn" -> A1 row 0, A2 row 0
     std::vector<qTuple> Data::getqTuples(const basics::vec2D<int> qMomList) {
         std::vector<qTuple> qTuples;
         for (int k = 0; k < qMomList.size(); k++) {
             qTuple q;
             q.mom3_i = qMomList[k];
-            q.momType = rotations::getMomType(q.mom3_i);
-            for (int hel = -1; hel <= 1; hel++) {
-                if (q.momType == "000") {
-                    q.irrep = "T1m";
-                    for (int row = 0; row < 3; row++) {
-                        q.irrepRow = row;
-                        qTuples.push_back(q);
-                    }
-                }
-                else {
-                    q.irrep = "A2";
-                    q.irrepRow = 0;
+            q.momType = basics::getMomType(q.mom3_i);
+            if (q.momType == "000") {
+                q.irrep = "T1m";
+                for (int row = 0; row < 3; row++) {
+                    q.irrepRow = row;
                     qTuples.push_back(q);
                 }
-                if (q.momType == "00n") {
-                    q.irrep = "E2";
-                    for (int row = 0; row < 2; row++) {
-                        q.irrepRow = row;
-                        qTuples.push_back(q);
-                    }
-                }
-                else if (q.momType == "0mn") {
-                    q.irrep = "A1";
-                    q.irrepRow = 0;
-                    qTuples.push_back(q);
-                    q.irrep = "A2";
+            }
+            else { // All other cases get an A2 contribution for hel=0
+                q.irrep = "A2";
+                q.irrepRow = 0;
+                qTuples.push_back(q);
+            }
+            if (q.momType == "00n") {
+                q.irrep = "E2";
+                for (int row = 0; row < 2; row++) {
+                    q.irrepRow = row;
                     qTuples.push_back(q);
                 }
-                
-                if (q.momType == "0nn") {
-                    q.irrepRow = 0;
-                    q.irrep = "B1";
+            }
+            else if (q.momType == "0mn") {
+                q.irrepRow = 0;
+                q.irrep = "A1";
+                qTuples.push_back(q);
+                q.irrep = "A2";
+                qTuples.push_back(q);
+            }
+            
+            if (q.momType == "0nn") {
+                q.irrepRow = 0;
+                q.irrep = "B1";
+                qTuples.push_back(q);
+                q.irrep = "B2";
+                qTuples.push_back(q);
+            }
+            else { // "nnn" case
+                q.irrep = "E2";
+                for (int row = 0; row < 2; row++) {
+                    q.irrepRow = row;
                     qTuples.push_back(q);
-                    q.irrep = "B2";
-                    qTuples.push_back(q);
-                }
-                else {
-                    q.irrep = "E2";
-                    for (int row = 0; row < 2; row++) {
-                        q.irrepRow = row;
-                        qTuples.push_back(q);
-                    }
                 }
             }
         }
         return qTuples;
     }
+
+    
 
     // Given a "qTuple", expand into superposition of helicity states with coeff basics::subductHelicity
     std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin) {
@@ -259,7 +259,7 @@ namespace kinFactors {
 
     // Another helper function to declutter Data::outputKinematics()
     std::string Data::getPiParamString(const std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V) {
-        std::string pi_param = std::to_string(V) + " " + rotations::getMomType(piMom);
+        std::string pi_param = std::to_string(V) + " " + basics::getMomType(piMom);
         if (piMom[0] == 0 && piMom[1] == 0 && piMom[2] == 0) {
             pi_param += " A1 ";
         }

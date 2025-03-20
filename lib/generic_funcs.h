@@ -130,13 +130,31 @@ namespace basics {
         return -1; 
     }
 
-    // Forward declarations
+    /////////////////// Forward declarations ///////////////////
+
+    // Overloaded function to get all permutations of a 3-momentum
+    /** @param mom3_i: 3-momentum vector as 3-component vector, 0 <= x <= 9 */
     vec2D<int> getMomPerms(const std::vector<int> mom3_i);
+    /** @param mom3_i: 3-momentum vector as a string in form "xyz", 0 <= x <= 9 */
     vec2D<int> getMomPerms(const std::string mom3_i);
-    std::vector<std::string> getIrreps(int etaTilde, const std::string momType, int helicity);
+
+    // Overloaded function to get the irreps for a given momentum type
+    std::vector<std::string> getIrreps(const basics::vec2D<int> mom3_i_List, int parity, int spin);
+    std::vector<std::string> getIrreps(const std::vector<std::string> momTypeList, int parity, int spin);
+    
+    // Function to get the subduction coefficients for a given helicity
     double subductHelicity(int etaTilde, const std::string irrep, const std::string momType, int helicity, int irrepRow);
-    /** Simple function to check if momentum is <= 211 in all permutations */
+
+    // Simple function to check if momentum is <= 211 in all permutations */
     bool check3Mom(const std::vector<int> mom3_i);
+
+    std::vector<int> getMom3_i(const std::string momStr);
+
+    // Convenience function
+    std::string getSym(const std::string momType);
+
+    // Convenience function
+    std::string getMomType(const std::vector<int> mom3_i);
 }
 
 #endif

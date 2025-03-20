@@ -9,7 +9,7 @@
 namespace matelem {
     state::state(int V, std::string irrep, double E, double Eerr, std::vector<int> mom3_i, int J, int P, int row, int Jz, double twopi_chiL, bool current) 
         : V(V), irrep(irrep), E(E), Eerr(Eerr), mom3_i(mom3_i), spin(J), spinZ(Jz), parity(P), irrepRow(row) {        
-        momType = rotations::getMomType(mom3_i);
+        momType = basics::getMomType(mom3_i);
         std::vector<double> mom3 = {mom3_i[0] * twopi_chiL, mom3_i[1] * twopi_chiL, mom3_i[2] * twopi_chiL};
         mom4 = {E, mom3[0], mom3[1], mom3[2]};
         double mom3_sq = basics::dot(mom3, mom3);
@@ -17,7 +17,7 @@ namespace matelem {
         else mState = std::sqrt((basics::fourDot(mom4, mom4)).real()); 
         coeff = 1.0;
         etaTilde = parity * std::pow(-1, spin);
-        sym = rotations::getSym(momType);
+        sym = basics::getSym(momType);
         polVec = rotations::getPol4_Jz(E, mom3_sq, mom3_i, Jz, sym, current);
     }
 

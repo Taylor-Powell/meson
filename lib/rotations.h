@@ -48,17 +48,6 @@ namespace rotations {
 
     /////////////////// Forward declarations ///////////////////
 
-    std::vector<int> getMom3_i(const std::string momStr);
-
-    // Convenience function
-    std::string getSym(const std::string momType);
-
-    // Convenience function
-    std::string getMomType(const std::vector<int> mom3_i);
-
-    // Convenience function
-    //std::string getIrrep(const std::string sym, const std::vector<int> mom);
-
     // Get the rotation angles for a given symmetry and momentum
     std::vector<double> getRotAngles(const std::string sym, const std::vector<int> mom3_i);
 

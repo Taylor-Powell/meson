@@ -5,40 +5,7 @@
 #include "generic_funcs.h"
 #include "rotations.h"
 
-namespace rotations {
-    std::vector<int> getMom3_i(const std::string momStr) {
-        std::vector<int> mom3_i;
-        for (int i = 0; i < 3; i++) {
-            mom3_i.push_back(momStr[i] - '0');
-        }
-        return mom3_i;
-    }
-
-    std::string getSym(const std::string momType) {
-        if (momType == "00n") return "Dic4";
-        else if (momType == "0nn") return "Dic2";
-        else if (momType == "nnn") return "Dic3";
-        else if (momType == "0mn") return "C40mn";
-        else if (momType == "nnm") return "C4nnm";
-        else if (momType == "000") return "OhD";
-        else throw std::string("Momentum " + momType + " not recognized in rotations::getSym().\n");
-    }
-
-    std::string getMomType(const std::vector<int> mom3_i) {
-        std::string sym;
-        int mom_sq = basics::dot(mom3_i, mom3_i);
-        if (mom_sq == 0) return "000";
-        else if (mom_sq == 1) return "00n";
-        else if (mom_sq == 2) return "0nn";
-        else if (mom_sq == 3) return "nnn";
-        else if (mom_sq == 4) return "00n"; 
-        else if (mom_sq == 5) return "0mn";
-        else if (mom_sq == 6) return "nnm";
-        else throw std::string("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " not recognized in rotations::getSym.\n");
-
-
-    }
-    
+namespace rotations {    
     std::vector<double> getRotAngles(const std::string sym, const std::vector<int> mom3_i) {
         if (sym == "OhD") return {0, 0, 0};
         for (int i = 0; i < symList.size(); i++) {
