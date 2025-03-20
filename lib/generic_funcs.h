@@ -139,8 +139,8 @@ namespace basics {
     vec2D<int> getMomPerms(const std::string mom3_i);
 
     // Overloaded function to get the irreps for a given momentum type
-    std::vector<std::string> getIrreps(const basics::vec2D<int> mom3_i_List, int parity, int spin);
-    std::vector<std::string> getIrreps(const std::vector<std::string> momTypeList, int parity, int spin);
+    std::vector<std::string> getIrreps(const std::vector<int> mom3_i, int parity, int spin);
+    std::vector<std::string> getIrreps(const std::string momType, int parity, int spin);
     
     // Function to get the subduction coefficients for a given helicity
     double subductHelicity(int etaTilde, const std::string irrep, const std::string momType, int helicity, int irrepRow);

@@ -92,7 +92,6 @@ namespace matelem {
             // Forward Declarations
             void ExpandHelOps(std::vector<state>& s);
             void subductHelicityState(std::vector<state>& s);
-            void subductJzState(std::vector<state>& s);
             cd getOmegaVal(state& in, state& out);
             std::vector<cd> kinFactors(state& in, state& cur, state& out);
     };

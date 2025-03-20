@@ -8,11 +8,10 @@
 #include "matelem.h"
 
 namespace kinFactors {
-    struct qTuple {
+    struct stateTuple {
         std::vector<int> mom3_i;
         std::string irrep, momType;
-        int irrepRow;
-        double Q_sq;
+        int irrepRow, absHelicity;
     };
     
     class Data {
@@ -44,8 +43,9 @@ namespace kinFactors {
             int numLvls, parity, spin, etaTilde;
 
             // Convenience functions for outputKinematics
-            std::vector<qTuple> getqTuples(const basics::vec2D<int> qMomList);
-            std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin);
+            //std::vector<qTuple> getqTuples(const basics::vec2D<int> qMomList);
+            std::vector<stateTuple> getTuples(const std::vector<int> mom3_i, int parity, int spin);
+            std::vector<std::pair<cd, int>> Data::getHelCoeffs(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin);
             std::string getPiParamString(const std::vector<int> mom3_i, double anis, double at_mpi, double twopi_chiL, int V);
     };
 }

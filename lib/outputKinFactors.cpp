@@ -129,7 +129,12 @@ namespace kinFactors {
             outState s = outStates[i];
             std::ofstream fout(s.outfile);
             double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
-            std::vector<qTuple> qTuples = getqTuples(qMomList);
+
+            std::vector<stateTuple> qTuples, inTuples;
+            for (int i = 0; i < qMomList.size(); i++) {
+                std::vector<stateTuple> temp = getTuples(qMomList[i], parity, spin);
+                qTuples.insert(qTuples.end(), temp.begin(), temp.end());
+            }
 
             // Make the 3-momentum base vector, check if it's <211, and get the momentum permutations
             if (!basics::check3Mom(s.mom3_i)) continue;
@@ -182,79 +187,54 @@ namespace kinFactors {
         }
     }
 
-    // For a given current 3-momentum, expand over the possible irreps and rows
-    // "000" -> T1m rows 0-2
-    // "00n" -> E2 rows 0-1
-    // "0nn" -> B1 row 0, B2 row 0
-    // "nnn" -> E2 rows 0-1
-    // "0mn" -> A1 row 0, A2 row 0
-    std::vector<qTuple> Data::getqTuples(const basics::vec2D<int> qMomList) {
-        std::vector<qTuple> qTuples;
-        for (int k = 0; k < qMomList.size(); k++) {
-            qTuple q;
-            q.mom3_i = qMomList[k];
-            q.momType = basics::getMomType(q.mom3_i);
-            if (q.momType == "000") {
-                q.irrep = "T1m";
-                for (int row = 0; row < 3; row++) {
-                    q.irrepRow = row;
-                    qTuples.push_back(q);
+    /** Function to get the tuples {mom3_i, irrep, irrepRow} over which to iterate. */
+    std::vector<stateTuple> Data::getTuples(const std::vector<int> mom3_i, int parity, int spin) {
+        // Initialize the output vector and the stateTuple struct
+        std::vector<stateTuple> tuples;
+        stateTuple s;
+
+        // Set the momType and get the irreps for the given mom3_i
+        s.momType = basics::getMomType(mom3_i);
+        std::vector<std::string> irreps = basics::getIrreps(mom3_i, parity, spin);
+
+        // Get the permutations of the mom3_i
+        basics::vec2D<int> perms = basics::getMomPerms(mom3_i);
+
+        // Iterate over the irreps and permutations to get the tuples
+        for (int i = 0; i < irreps.size(); i++) {            
+            s.irrep = irreps[i];
+            s.irrepRow = 0;
+            for (int j = 0; j < perms.size(); j++) {
+                s.mom3_i = perms[j];
+                tuples.push_back(s); // Always push back the irrepRow 0 tuple
+                if (s.irrep == "E2") { // 2-dimensional irreps
+                    s.irrepRow = 1;
+                    tuples.push_back(s);
                 }
-            }
-            else { // All other cases get an A2 contribution for hel=0
-                q.irrep = "A2";
-                q.irrepRow = 0;
-                qTuples.push_back(q);
-            }
-            if (q.momType == "00n") {
-                q.irrep = "E2";
-                for (int row = 0; row < 2; row++) {
-                    q.irrepRow = row;
-                    qTuples.push_back(q);
-                }
-            }
-            else if (q.momType == "0mn") {
-                q.irrepRow = 0;
-                q.irrep = "A1";
-                qTuples.push_back(q);
-                q.irrep = "A2";
-                qTuples.push_back(q);
-            }
-            
-            if (q.momType == "0nn") {
-                q.irrepRow = 0;
-                q.irrep = "B1";
-                qTuples.push_back(q);
-                q.irrep = "B2";
-                qTuples.push_back(q);
-            }
-            else { // "nnn" case
-                q.irrep = "E2";
-                for (int row = 0; row < 2; row++) {
-                    q.irrepRow = row;
-                    qTuples.push_back(q);
-                }
-            }
+                else if (s.irrep == "T1p" || s.irrep == "T1m") { // 3-dimensional irreps
+                    for (int row = 1; row < 3; row++) {
+                        s.irrepRow = row;
+                        tuples.push_back(s);
+                    }
+                }    
+            }        
         }
-        return qTuples;
+        return tuples;
     }
 
-    
+    // Get subduced helicity states with coeff from basics::subductHelicity()
+    std::vector<std::pair<cd, int>> Data::getHelCoeffs(int etaTilde, std::string momType, std::string irrep, int irrepRow, int absHel) {
+        // Sanity checks
+        if (absHel > 1) std::string("abs(helicity) > 1 in Data::getHelStates()\n ");
+        else if (absHel < 0) std::string("abs(helicity) < 0 in Data::getHelStates()\n ");
 
-    // Given a "qTuple", expand into superposition of helicity states with coeff basics::subductHelicity
-    std::vector<std::pair<cd, int>> Data::getHelStates(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin) {
-        std::vector<std::pair<cd, int>> coeffANDhelicities;
-        if (spin == 0) {
-            coeffANDhelicities.push_back(std::pair(1.0, 0));
+        // Initialize the output vector and the pair<cd, int> struct
+        std::vector<std::pair<cd, int>> vals;
+        vals.push_back(std::pair(basics::subductHelicity(etaTilde, irrep, momType, absHel, irrepRow), absHel));
+        if (absHel != 0) { // If helicity is not 0, add the helicity -absHel state
+            vals.push_back(std::pair(basics::subductHelicity(etaTilde, irrep, momType, -absHel, irrepRow), -absHel));
         }
-        else if (spin == 1) {
-            for (int hel = -1; hel < 2; hel++) { // Iterate over possible helicities, calculate subduction coeffs, add to stack.
-                double val = basics::subductHelicity(etaTilde, irrep, momType, hel, irrepRow);
-                coeffANDhelicities.push_back(std::pair(val, hel));
-            }
-        }
-        else throw std::string("Spin > 1 in Data::getHelStates()\n ");
-        return coeffANDhelicities;
+        return vals;
     }
 
     // Another helper function to declutter Data::outputKinematics()
