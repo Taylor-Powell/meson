@@ -61,7 +61,7 @@ namespace rotations {
     std::vector<cd> getPolz4(double E, double mom_sq, int Jz, bool current);
 
     // Get the polarization vector for a given Jz, rotated from the z-axis
-    std::vector<cd> getPol4_Jz(double E, double mom_sq, const std::vector<int> mom3_i, int Jz, const std::string sym, bool current);
+    // std::vector<cd> getPol4_Jz(double E, double mom_sq, const std::vector<int> mom3_i, int Jz, const std::string sym, bool current);
 
     // Get the polarization vector for a given helicity, rotated from the z-axis
     std::vector<cd> getPol4_hel(double E, double mom_sq, std::vector<int> mom3_i, int helicity, const std::string sym, bool current);

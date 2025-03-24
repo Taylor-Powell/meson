@@ -44,19 +44,19 @@ namespace basics {
         return perms;
     }
 
-    vec2D<int> getMomPerms(const std::vector<int> mom3_i) {
+    vec2D<int> getMomPerms(const std::vector<int>& mom3_i) {
         if (mom3_i.size() != 3) {
             throw std::string("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " is not 3 digits in basics::getMomPerms.\n");
         }
         // Initialize variables
         vec2D<int> perms;
+        std::vector<int> sortedMom3_i = mom3_i;
         
-        std::sort(mom3_i.begin(), mom3_i.end());
+        std::sort(sortedMom3_i.begin(), sortedMom3_i.end());
         do { // Generate all permutations
             int numFlips = 8; // 2^3 possible sign flips
             for (int i = 0; i < numFlips; ++i) { // Loop over all possible sign flips
-                std::vector<int> flippedVec = mom3_i;
-                bool skip = false;
+                std::vector<int> flippedVec = sortedMom3_i;
                 for (int j = 0; j < 3; ++j) {
                     if (i & (1 << j)) { // If jth bit is set
                         flippedVec[j] = -flippedVec[j];
@@ -64,7 +64,7 @@ namespace basics {
                 }
                 perms.push_back(flippedVec);
             }
-        } while (std::next_permutation(mom3_i.begin(), mom3_i.end()));
+        } while (std::next_permutation(sortedMom3_i.begin(), sortedMom3_i.end()));
 
         // Remove duplicate permutations
         std::sort(perms.begin(), perms.end());
@@ -147,6 +147,25 @@ namespace basics {
 
     // Only written up to helicity 1 for current need.
     double subductHelicity(int etaTilde, const std::string irrep, const std::string momType, int helicity, int irrepRow) {
+
+        // Should split this into subductions for OhD and helicity
+        if (momType == "000" ) {
+            if (etaTilde == 1) {
+                if (irrep == "A1") return 1.0;
+                else if (irrep == "T1m") {
+                    if (irrepRow - 1 == helicity) return 1.0;
+                    else return 0.0;
+                }
+            }
+            else if (etaTilde == -1) {
+                if (irrep == "A2") return 1.0;
+                else if (irrep == "T1p") {
+                    if (irrepRow - 1 == helicity) return 1.0;
+                    else return 0.0;
+                }
+            }
+            else return 0.0;
+        }
         if (helicity == 0) {
             if ((etaTilde == 1) && (irrep == "A1")) return 1.0;
             else if ((etaTilde == -1) && (irrep == "A2")) return 1.0;
@@ -160,7 +179,7 @@ namespace basics {
             else if (((irrep == "B1") || (irrep == "B2")) && (momType == "0nn")) {
                 s = (irrep == "B1") ? 1 : -1;
             }
-            else if ((irrep == "A1") || (irrep == "A2")) {
+            else if (((irrep == "A1") || (irrep == "A2")) && ((momType == "0mn") || (momType == "nnm"))) {
                 s = (irrep == "A1") ? -1 : 1;
             }
             else return 0.0;

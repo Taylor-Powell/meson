@@ -7,8 +7,8 @@
 
 
 namespace matelem {
-    state::state(int V, std::string irrep, double E, double Eerr, std::vector<int> mom3_i, int J, int P, int row, int Jz, double twopi_chiL, bool current) 
-        : V(V), irrep(irrep), E(E), Eerr(Eerr), mom3_i(mom3_i), spin(J), spinZ(Jz), parity(P), irrepRow(row) {        
+    state::state(int V, std::string irrep, double E, double Eerr, std::vector<int> mom3_i, int J, int P, int row, int helicity, double twopi_chiL, bool current) 
+        : V(V), irrep(irrep), E(E), Eerr(Eerr), mom3_i(mom3_i), spin(J), helicity(helicity), parity(P), irrepRow(row) {        
         momType = basics::getMomType(mom3_i);
         std::vector<double> mom3 = {mom3_i[0] * twopi_chiL, mom3_i[1] * twopi_chiL, mom3_i[2] * twopi_chiL};
         mom4 = {E, mom3[0], mom3[1], mom3[2]};
@@ -18,7 +18,7 @@ namespace matelem {
         coeff = 1.0;
         etaTilde = parity * std::pow(-1, spin);
         sym = basics::getSym(momType);
-        polVec = rotations::getPol4_Jz(E, mom3_sq, mom3_i, Jz, sym, current);
+        polVec = rotations::getPol4_hel(E, mom3_sq, mom3_i, helicity, sym, current);
     }
 
     void matelem::expandAllHelOps() {
@@ -28,16 +28,12 @@ namespace matelem {
     }
 
     void matelem::subductAll(bool isHelState) {
-        if (isHelState) {
-            subductHelicityState(init);
-            subductHelicityState(cur);
-            subductHelicityState(fin);
+        if (!isHelState) {
+            throw std::string("subductAll called with isHelState = false.\n");
         }
-        else {
-            subductJzState(init);
-            subductJzState(cur);
-            subductJzState(fin);
-        }
+        subductHelicityState(init);
+        subductHelicityState(cur);
+        subductHelicityState(fin);
     }
     
     void matelem::calcKinFactors() {
@@ -53,15 +49,17 @@ namespace matelem {
                     std::cout << ", C1 = " << kin[1] << std::endl;
                     #endif
                     kFactors.push_back(kin);
-
-                    std::string out  = "p_b1=";
-                    out += std::to_string(init[i].mom3_i[0]) + std::to_string(init[i].mom3_i[1]) + std::to_string(init[i].mom3_i[2]) + " q=";
-                    out += std::to_string(cur[j].mom3_i[0]) + std::to_string(cur[j].mom3_i[1]) + std::to_string(cur[j].mom3_i[2]) + " irrep=";
-                    out += cur[j].irrep + " row=" + std::to_string(cur[j].irrepRow) + " ";
                     cd Qsq = getQsq(init[i], fin[k]);
-                    out += "Qsq=" + std::to_string(Qsq.real()) + " ";
-                    out += " E1=(" + std::to_string(kin[0].real()) + ", " + std::to_string(kin[0].imag()) + ") ";
-                    out += " C1=(" + std::to_string(kin[1].real()) + ", " + std::to_string(kin[1].imag()) + ")";
+                    
+
+                    std::string out = "Qsq=" + basics::formatValue(Qsq.real()) + ", ";
+                    out += "b1(";
+                    out += std::to_string(init[i].mom3_i[0]) + std::to_string(init[i].mom3_i[1]) + std::to_string(init[i].mom3_i[2]) + ") ";
+                    out += init[i].irrep + "(" + std::to_string(init[i].irrepRow) + "), ";
+                    out += "q(";                    out += std::to_string(cur[j].mom3_i[0]) + std::to_string(cur[j].mom3_i[1]) + std::to_string(cur[j].mom3_i[2]) + ") ";
+                    out += cur[j].irrep + "(" + std::to_string(cur[j].irrepRow) + "), ";
+                    out += "E1=(" + basics::formatValue(kin[0].real()) + ", " + basics::formatValue(kin[0].imag()) + "), ";
+                    out += "C1=(" + basics::formatValue(kin[1].real()) + ", " + basics::formatValue(kin[1].imag()) + ")";
                     outstring.push_back(out);
                 }
             }
@@ -98,21 +96,21 @@ namespace matelem {
     }
     
     void matelem::ExpandHelOps(std::vector<state>& s) {
-        std::vector<state> s2;
-        for (int i = 0; i < s.size(); i++) {
-            state sTemp;
-            std::vector<double> angles;
-            std::vector<state> newStates;
-            for (int i = 0; i <= 2 * s[i].spin + 1; i++) {
-                sTemp = s[i];
-                angles = rotations::getRotAngles(sTemp.sym, sTemp.mom3_i);
-                sTemp.spinZ = -s[i].spin + i;
-                sTemp.coeff *= std::conj(WignerD::Wigner_D(s[i].spin, s[i].spinZ, s[i].helicity, angles[0], angles[1], angles[2]));
-                newStates.push_back(sTemp);
-            }
-            s2.insert(s2.end(), newStates.begin(), newStates.end());
-        }
-        s = s2;
+        // std::vector<state> s2;
+        // for (int i = 0; i < s.size(); i++) {
+        //     state sTemp;
+        //     std::vector<double> angles;
+        //     std::vector<state> newStates;
+        //     for (int i = 0; i <= 2 * s[i].spin + 1; i++) {
+        //         sTemp = s[i];
+        //         angles = rotations::getRotAngles(sTemp.sym, sTemp.mom3_i);
+        //         sTemp.spinZ = -s[i].spin + i;
+        //         sTemp.coeff *= std::conj(WignerD::Wigner_D(s[i].spin, s[i].spinZ, s[i].helicity, angles[0], angles[1], angles[2]));
+        //         newStates.push_back(sTemp);
+        //     }
+        //     s2.insert(s2.end(), newStates.begin(), newStates.end());
+        // }
+        // s = s2;
     }
 
     cd matelem::getOmegaVal(state& in, state& out) { // Checked

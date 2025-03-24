@@ -30,22 +30,23 @@ namespace kinFactors {
             void outputKinematics(const basics::vec2D<int> qMomList);
 
         private:
-            struct outState {
-                int V;
+            struct inState {
+                int V, irrepRow;
                 std::string momstr, momType, irrep, params, outfile;
                 double E, Eerr;
                 std::vector<int> mom3_i;
             };
-            std::vector<outState> outStates;
+            std::vector<inState> inStates;
             std::vector<std::string> outStrings;
             std::vector<std::vector<cd>> kFactors;
             double anis, at_mpi, at_inv;
             int numLvls, parity, spin, etaTilde;
+            int inAbsHelicity, outAbsHelicity;
 
             // Convenience functions for outputKinematics
-            //std::vector<qTuple> getqTuples(const basics::vec2D<int> qMomList);
             std::vector<stateTuple> getTuples(const std::vector<int> mom3_i, int parity, int spin);
-            std::vector<std::pair<cd, int>> Data::getHelCoeffs(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin);
+            std::vector<stateTuple> getTuples(const std::vector<int> mom3_i, int parity, int spin, int absHelMax);
+            std::vector<std::pair<cd, int>> getHelCoeffs(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin);
             std::string getPiParamString(const std::vector<int> mom3_i, double anis, double at_mpi, double twopi_chiL, int V);
     };
 }

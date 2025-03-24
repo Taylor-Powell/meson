@@ -22,6 +22,16 @@ namespace basics {
     #define MAX(x,y) (x>y ? x : y)
     #define MIN(x,y) (x<y ? x : y)
 
+    template <typename T>
+    std::string formatValue(T val) {
+        std::string str = std::to_string(val);
+        if (str.find(".") != std::string::npos) {
+            str = str.substr(0, str.find(".") + 5);
+            if ((str == "0.0000") || (str == "-0.0000")) return std::string("0");
+        }
+        return str;
+    }
+
     template <typename T> // From Numerical Recipes
     T factorial(const int n) {
         static int ntop = 4;
@@ -134,7 +144,7 @@ namespace basics {
 
     // Overloaded function to get all permutations of a 3-momentum
     /** @param mom3_i: 3-momentum vector as 3-component vector, 0 <= x <= 9 */
-    vec2D<int> getMomPerms(const std::vector<int> mom3_i);
+    vec2D<int> getMomPerms(const std::vector<int>& mom3_i);
     /** @param mom3_i: 3-momentum vector as a string in form "xyz", 0 <= x <= 9 */
     vec2D<int> getMomPerms(const std::string mom3_i);
 

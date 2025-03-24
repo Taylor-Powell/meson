@@ -6,7 +6,7 @@
 namespace kinFactors {
     void Data::readData(const std::string filename) {
         std::ifstream file (filename);
-        outState s;
+        inState s;
         if (!file) {
             std::string errormsg = "Failed to open file in ";
             errormsg += __func__;
@@ -24,24 +24,40 @@ namespace kinFactors {
                     else if (var == "at_inv") ss >> at_inv;
                     else if (var == "P") ss >> parity;
                     else if (var == "J") ss >> spin;
+                    else if (var == "inAbsHelicity") ss >> inAbsHelicity;
+                    else if (var == "outAbsHelicity") ss >> outAbsHelicity;
                     else continue;
                 }
                 else if ((var[0] == 'V') && (var[1] != ' ')) {
                     var.erase(0, 1); // Remove "V" from string
                     std::stringstream ss(var);
-                    std::string momstr;
+                    std::string momstr, tempFile;
                     ss >> s.V >> momstr >> s.irrep >> s.E >> s.Eerr;
                     s.mom3_i = basics::getMom3_i(momstr);
                     s.momType = basics::getMomType(s.mom3_i);
                     s.params = var;
-                    s.outfile = "data/kinFactors_V_" + std::to_string(s.V);
-                    s.outfile += "_E_" + std::to_string(s.E).substr(0, std::to_string(s.E).find('.') + 7);
-                    s.outfile += "_b1mom_" + s.momstr + ".dat";
-                    outStates.push_back(s);
+                    tempFile = "data/kinFactors_V_" + std::to_string(s.V);
+                    tempFile += "_b1mom_" + momstr;
+                    tempFile += "_irrep_" + s.irrep;
+                    tempFile+= "_E_" + std::to_string(s.E).substr(0, std::to_string(s.E).find('.') + 6);
+                    double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
+                    s.irrepRow = 1;
+                    s.outfile = tempFile + "_irrepRow_" + std::to_string(s.irrepRow) + ".dat";
+                    inStates.push_back(s);
+                    // Rigging it simply for now... b1 states are either A2 or T1p
+                    // If generalizing, CHANGE THIS
+                    if (s.irrep == "T1p") {
+                        s.irrepRow = 2;
+                        s.outfile = tempFile + "_irrepRow_" + std::to_string(s.irrepRow) + ".dat";
+                        inStates.push_back(s);
+                        s.irrepRow = 3;
+                        s.outfile = tempFile + "_irrepRow_" + std::to_string(s.irrepRow) + ".dat";
+                        inStates.push_back(s);
+                    }
                 }
                 else continue;
             }
-            numLvls = outStates.size();
+            numLvls = inStates.size();
             etaTilde = parity * std::pow(-1, spin);
             #if 0
             printParams();
@@ -52,57 +68,6 @@ namespace kinFactors {
                 errormsg += __func__;
                 throw errormsg;
             }
-
-            // Test outputKinematics with first line of .txt file
-            #if 0
-
-            // Verbose output
-            bool printSteps = false;
-            #if 0
-            printSteps = true;
-            #endif
-
-            basics::vec2D<int> qMomList = {{0,0,1}};
-            outState s = outStates[0];
-            std::ofstream fout(s.outfile);
-            double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
-            std::cout << "Param string = " << s.params << std::endl;
-            std::vector<int> mom3;
-            for (int i = 0; i < s.momstr.size(); i++) {
-                mom3.push_back(s.momstr[i] - '0');
-            }
-            if (printSteps) std::cout << "Making in state..." << std::endl;
-            matelem::state in(s.V, s.irrep, s.E, s.Eerr, mom3, spin, parity, 0, 0, twopi_chiL, false);
-
-
-            if (printSteps) std::cout << "Making out state..." << std::endl;
-            std::vector<qTuple> qTuples = getqTuples(qMomList);
-            std::vector<int> piMom;
-            std::string pi_irrep = "A1";
-            for (int i = 0; i < 3; i++) {
-                piMom.push_back(mom3[i] - qTuples[0].qMom3[i]);
-                if (piMom[i] != 0) pi_irrep = "A2";
-            }
-            double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
-            matelem::state out(s.V, pi_irrep, Epi, 0.0, piMom, 0, -1, 0, 0, twopi_chiL, false);
-
-            
-            if (printSteps) std::cout << "Making current state..." << std::endl;
-            for (int i = 0; i < qTuples.size(); i++) {
-                matelem::state cur(s.V, qTuples[i].irrep, s.E - Epi, 0.0, qTuples[i].qMom3, 1, -1, qTuples[i].irrepRow, qTuples[i].helicity, twopi_chiL, true);
-                if (printSteps) std::cout << "Making matelem..." << std::endl;
-                matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
-                if (printSteps) std::cout << "Calculating kinematic factors..." << std::endl;
-                m.calcKinFactors();
-                if (printSteps) std::cout << "Writing kinematic factors..." << std::endl;
-                m.writeKinFactors(fout);
-            }
-            
-            fout.close();
-
-
-
-            #endif
         }
     }
 
@@ -115,64 +80,84 @@ namespace kinFactors {
         std::cout << "numLvls = " << numLvls << std::endl;
         std::cout << std::left;
         for (int i = 0; i < numLvls; i++) {
-            std::cout << "V = " << std::setw(5) << outStates[i].V 
-                      << "E = " << std::setw(10) << outStates[i].E 
-                      << "+/- " << std::setw(11) << outStates[i].Eerr
-                      << "mom = " << std::setw(6) << outStates[i].momstr
-                      << "irrep = " << std::setw(6) << outStates[i].irrep
+            std::cout << "V = " << std::setw(5) << inStates[i].V 
+                      << "E = " << std::setw(10) << inStates[i].E 
+                      << "+/- " << std::setw(11) << inStates[i].Eerr
+                      << "mom = " << std::setw(6) << inStates[i].momstr
+                      << "irrep = " << std::setw(6) << inStates[i].irrep
                       << std::endl;
         }
     }
 
     void Data::outputKinematics(const basics::vec2D<int> qMomList) {
-        for (int i = 0; i < outStates.size(); i++) {
-            outState s = outStates[i];
+        // Fix helicity of b1 to 0
+        int inHelicity = 0;
+
+        // Define a small epsilon
+        double epsilon = 1.0e-10;
+
+        // Iterate over the qMomList to get the qTuples
+        // These are fixed for each qMom, so only need to be calculated once 
+        std::vector<stateTuple> qTuples;
+        for (int i = 0; i < qMomList.size(); i++) {
+            // Use version allowing for absHel = {0, 1}
+            std::vector<stateTuple> temp = getTuples(qMomList[i], parity, spin);
+            qTuples.insert(qTuples.end(), temp.begin(), temp.end());
+        }
+
+        // Iterate over lines of inState txt file (b1 states)
+        for (int i = 0; i < inStates.size(); i++) {
+            inState s = inStates[i];
+            double coeff = basics::subductHelicity(etaTilde, s.irrep, s.momType, inHelicity, s.irrepRow);
+            if (std::abs(coeff) < epsilon) continue;
+
+            // New file for each level
             std::ofstream fout(s.outfile);
             double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
 
-            std::vector<stateTuple> qTuples, inTuples;
-            for (int i = 0; i < qMomList.size(); i++) {
-                std::vector<stateTuple> temp = getTuples(qMomList[i], parity, spin);
-                qTuples.insert(qTuples.end(), temp.begin(), temp.end());
-            }
-
             // Make the 3-momentum base vector, check if it's <211, and get the momentum permutations
+            // The check here should be redundant since the input file should only
+            //      contain valid 3-momenta
             if (!basics::check3Mom(s.mom3_i)) continue;
             basics::vec2D<int> pMomList = basics::getMomPerms(s.mom3_i);
 
-            // Iterate over the momentum permutations
-            for (int j = 0; j < pMomList.size(); j++) {
-                matelem::state in(s.V, s.irrep, s.E, s.Eerr, pMomList[j], spin, parity, 0, 0, twopi_chiL, false);                
+            // Iterate over the momentum permutations of inState
+            for (int k = 0; k < pMomList.size(); k++) {
+                matelem::state in(s.V, s.irrep, s.E, s.Eerr, pMomList[k], spin, parity, s.irrepRow, inHelicity, twopi_chiL, false);
+
                 // Iterate over all qTuples (mom3, irrep, irrepRow)
-                for(int k = 0; k < qTuples.size(); k++) {
+                for(int qdx = 0; qdx < qTuples.size(); qdx++) {
                     // Fix the pion momentum and irrep, then ensure piMom < 211
-                    std::vector<int> piMom;
-                    std::string pi_irrep = "A1";
+                    std::vector<int> piMom3_i;
+                    std::string pi_irrep = "A1"; // Inflexible, CHANGE THIS if generalizing
                     for (int ii = 0; ii < 3; ii++) {
-                        piMom.push_back(pMomList[j][ii] - qTuples[k].mom3_i[ii]);
-                        if (piMom[ii] != 0) pi_irrep = "A2";
+                        piMom3_i.push_back(pMomList[k][ii] - qTuples[qdx].mom3_i[ii]);
+                        if (piMom3_i[ii] != 0) pi_irrep = "A2";
                     }
-                    if (!basics::check3Mom(piMom)) continue;
+                    if (!basics::check3Mom(piMom3_i)) continue;
 
                     // Calculate Epi and create the states for the pion and current
-                    double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
-                    matelem::state out(s.V, pi_irrep, Epi, 0.0, piMom, 0, -1, 0, 0, twopi_chiL, false);
-                    
-                    #if 0 // Gotta fix the current state creation
-                    matelem::state cur(s.V, qTuples[k].irrep, s.E - Epi, 0.0, qTuples[k].qMom3, 1, -1, qTuples[k].irrepRow, qTuples[k].helicity, twopi_chiL, true);
+                    double Epi = std::sqrt(std::pow(at_mpi, 2) + std::pow(twopi_chiL, 2) * basics::dot(piMom3_i, piMom3_i));
+                    matelem::state out(s.V, pi_irrep, Epi, 0.0, piMom3_i, 0, -1, 1, 0, twopi_chiL, false);
+
+                    // Create the current state
+                    matelem::state cur(s.V, qTuples[qdx].irrep, s.E - Epi, 0.0, qTuples[qdx].mom3_i, 1, -1, qTuples[qdx].irrepRow, qTuples[qdx].absHelicity, twopi_chiL, true);
 
                     // Create the matrix element container, then calculate the kinematic factors and append them to the output container
                     matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
+                    m.subductAll(true);
                     m.calcKinFactors();
+
                     // Append m.kFactors to kFactors using m.getKinFactors()
                     std::vector<std::vector<cd>> kF = m.getKinFactors();
                     kFactors.insert(kFactors.end(), kF.begin(), kF.end());
                     // Append m.outstring to outStrings using m.getOutStrings()
                     std::vector<std::string> oS = m.getOutStrings();
                     outStrings.insert(outStrings.end(), oS.begin(), oS.end());
-                    #endif
                 }
-            }
+            }           
+
+            
             // sort kFactors and outStrings by Q_sq
             std::vector<std::pair<double, int>> QsqIndex;
             for (int i = 0; i < kFactors.size(); i++) {
@@ -187,11 +172,57 @@ namespace kinFactors {
         }
     }
 
-    /** Function to get the tuples {mom3_i, irrep, irrepRow} over which to iterate. */
+    /** Overloaded function to get the tuples {mom3_i, irrep, irrepRow} over which to iterate. */
     std::vector<stateTuple> Data::getTuples(const std::vector<int> mom3_i, int parity, int spin) {
         // Initialize the output vector and the stateTuple struct
         std::vector<stateTuple> tuples;
         stateTuple s;
+
+        // Also have to iterate over |\lambda|
+        for (int idx = 0; idx <= spin; idx++) {
+            s.absHelicity = idx;
+
+            // Set the momType and get the irreps for the given mom3_i
+            s.momType = basics::getMomType(mom3_i);
+            std::vector<std::string> irreps = basics::getIrreps(mom3_i, parity, spin);
+
+            // Get the permutations of the mom3_i
+            basics::vec2D<int> perms = basics::getMomPerms(mom3_i);
+
+            // Iterate over the irreps and permutations to get the tuples
+            for (int i = 0; i < irreps.size(); i++) {            
+                s.irrep = irreps[i];
+                s.irrepRow = 1;
+                for (int j = 0; j < perms.size(); j++) {
+                    s.mom3_i = perms[j];
+                    tuples.push_back(s); // Always push back the irrepRow 0 tuple
+                    if (s.irrep == "E2") { // 2-dimensional irreps
+                        s.irrepRow = 2;
+                        tuples.push_back(s);
+                    }
+                    else if (s.irrep == "T1p" || s.irrep == "T1m") { // 3-dimensional irreps
+                        for (int row = 2; row <= 3; row++) {
+                            s.irrepRow = row;
+                            tuples.push_back(s);
+                        }
+                    }    
+                }        
+            }   
+        }
+        return tuples;
+    }
+
+    /** Overloaded function to get the tuples {mom3_i, irrep, irrepRow} over which to iterate. */
+    std::vector<stateTuple> Data::getTuples(const std::vector<int> mom3_i, int parity, int spin, int targetAbsHel) {
+        // Initialize the output vector and the stateTuple struct
+        std::vector<stateTuple> tuples;
+        stateTuple s;
+
+        // Check that absHelMax is valid. If must be >= 0 and <= spin
+        if (targetAbsHel < 0 || targetAbsHel > spin) {
+            throw std::string("Invalid targetAbsHel in Data::getMoreTuples()\n");
+        }
+        s.absHelicity = targetAbsHel;
 
         // Set the momType and get the irreps for the given mom3_i
         s.momType = basics::getMomType(mom3_i);
@@ -203,22 +234,22 @@ namespace kinFactors {
         // Iterate over the irreps and permutations to get the tuples
         for (int i = 0; i < irreps.size(); i++) {            
             s.irrep = irreps[i];
-            s.irrepRow = 0;
+            s.irrepRow = 1;
             for (int j = 0; j < perms.size(); j++) {
                 s.mom3_i = perms[j];
                 tuples.push_back(s); // Always push back the irrepRow 0 tuple
                 if (s.irrep == "E2") { // 2-dimensional irreps
-                    s.irrepRow = 1;
+                    s.irrepRow = 2;
                     tuples.push_back(s);
                 }
                 else if (s.irrep == "T1p" || s.irrep == "T1m") { // 3-dimensional irreps
-                    for (int row = 1; row < 3; row++) {
+                    for (int row = 2; row <= 3; row++) {
                         s.irrepRow = row;
                         tuples.push_back(s);
                     }
                 }    
             }        
-        }
+        }   
         return tuples;
     }
 

@@ -32,16 +32,16 @@ namespace matelem {
         @param J: Spin
         @param P: Parity
         @param row: Row of the irrep
-        @param Jz: Spin projection 
+        @param absHel: Absolute value of target helicity 
         @param twopi_chiL: 2 * pi / (anis * V)
         @param current: Whether the state is a current
         */ 
-        state(int V, std::string irrep, double E, double Eerr, std::vector<int> mom3_i, int J, int P, int row, int Jz, double twopi_chiL, bool current);
+        state(int V, std::string irrep, double E, double Eerr, std::vector<int> mom3_i, int J, int P, int row, int absHel, double twopi_chiL, bool current);
         state() {}
         std::vector<int> mom3_i;
         std::vector<cd> mom4, polVec;
         std::string params, momType, irrep, sym;
-        int V, irrepRow, helicity, spin, spinZ, parity, etaTilde;
+        int V, irrepRow, helicity, spin, absHel, parity, etaTilde;
         double E, Eerr, mState;
         cd coeff;
     };
@@ -56,7 +56,7 @@ namespace matelem {
              * @param anis: Anisotropy of the lattice
              * @param twopi_chiL: 2 * pi / (anis * V)
              */
-            matelem(state in, state J, state out, int V, double anis, double twopi_chiL) : anis(anis), V(V), twopi_chiL(twopi_chiL) {
+            matelem(state in, state J, state out, int V, double anis, double twopi_chiL) : V(V), anis(anis), twopi_chiL(twopi_chiL) {
                 init.push_back(in);
                 cur.push_back(J);
                 fin.push_back(out);

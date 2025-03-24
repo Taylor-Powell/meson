@@ -3,6 +3,8 @@ at_mpi=0.06906
 at_inv=5666
 P=1
 J=1
+inAbsHelicity=0
+outAbsHelicity=0
 
 V mom irrep E err
 V16 001 A2 0.229453 0.001774
