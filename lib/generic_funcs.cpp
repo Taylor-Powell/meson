@@ -111,9 +111,9 @@ namespace basics {
 
     std::vector<std::string> getIrreps(const std::string momType, int parity, int spin) {
         // Sanity checks
-        if (spin > 1) throw std::string("Spin > 1 in Data::getIrreps()\n");
-        else if (spin < 0) throw std::string("Spin < 0 in Data::getIrreps()\n");
-        else if (parity != 1 && parity != -1) throw std::string("Invalid parity in Data::getIrreps()\n");
+        if (spin > 1) throw std::string("Spin > 1 in basics::getIrreps()\n");
+        else if (spin < 0) throw std::string("Spin < 0 in basics::getIrreps()\n");
+        else if (parity != 1 && parity != -1) throw std::string("Invalid parity in basics::getIrreps()\n");
 
         std::vector<std::string> irreps;
         int etaTilde = parity * std::pow(-1, spin);
@@ -150,16 +150,15 @@ namespace basics {
 
         // Should split this into subductions for OhD and helicity
         if (momType == "000" ) {
-            if (etaTilde == 1) {
-                if (irrep == "A1") return 1.0;
-                else if (irrep == "T1m") {
+            if (irrep == "A1") return 1.0;
+            else if (etaTilde == 1) {
+                if (irrep == "T1m") {
                     if (irrepRow - 1 == helicity) return 1.0;
                     else return 0.0;
                 }
             }
             else if (etaTilde == -1) {
-                if (irrep == "A2") return 1.0;
-                else if (irrep == "T1p") {
+                if (irrep == "T1p") {
                     if (irrepRow - 1 == helicity) return 1.0;
                     else return 0.0;
                 }

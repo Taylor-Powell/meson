@@ -31,49 +31,121 @@ namespace matelem {
         if (!isHelState) {
             throw std::string("subductAll called with isHelState = false.\n");
         }
+        double eps = 1e-10;
+        bool zeroCheck = false;
+
+        #if 0
+        zeroCheck = true;
+        #endif
+
         subductHelicityState(init);
+        if (zeroCheck) for (int i = 0; i < init.size(); i++) {
+            if (std::abs(init[i].coeff) < eps) {
+                std::cout << "Zero for b1(" << std::to_string(init[i].mom3_i[0]) << std::to_string(init[i].mom3_i[1]) << std::to_string(init[i].mom3_i[2]) << ") ";
+                std::cout << init[i].irrep << "(" << init[i].irrepRow << ") etaTilde=" << init[i].etaTilde;
+                std::cout << ", hel=" << init[i].helicity << std::endl;
+            }
+        }
         subductHelicityState(cur);
+        if (zeroCheck) for (int i = 0; i < cur.size(); i++) {
+            if (std::abs(cur[i].coeff) < eps) {
+                std::cout << "Zero for current(" << std::to_string(cur[i].mom3_i[0]) << std::to_string(cur[i].mom3_i[1]) << std::to_string(cur[i].mom3_i[2]) << ") ";
+                std::cout << cur[i].irrep << "(" << cur[i].irrepRow << ") etaTilde=" << cur[i].etaTilde;
+                std::cout << ", hel=" << cur[i].helicity << std::endl;
+            }
+        }
         subductHelicityState(fin);
+        if (zeroCheck) for (int i = 0; i < fin.size(); i++) {
+            if (std::abs(fin[i].coeff) < eps) {
+                std::cout << "Zero for pion(" << std::to_string(fin[i].mom3_i[0]) << std::to_string(fin[i].mom3_i[1]) << std::to_string(fin[i].mom3_i[2]) << ") ";
+                std::cout << fin[i].irrep << "(" << fin[i].irrepRow << ") etaTilde=" << fin[i].etaTilde;
+                std::cout << ", hel=" << fin[i].helicity << std::endl;
+            }
+        }
     }
     
-    void matelem::calcKinFactors() {
+    bool matelem::calcKinFactors() {
         // std::cout << "Calculating kinematic factors..." << std::endl;
         std::vector<cd> kin;
+        std::vector<std::vector<cd>> kins;
+        std::vector<std::vector<int>> indices;
+        std::vector<double> coeffs;
+        cd Qsq = 0.0;
+        std::string out;
         double epsilon = 1e-10;
+        int skipCount = 0, totalCount = 0;
+        bool zeroCheck = false;
+
+        #if 0
+        zeroCheck = true;
+        #endif
+
         for (int i = 0; i < init.size(); i++) {
-            if (abs(init[i].coeff) < epsilon) continue;
+            if (abs(init[i].coeff) < epsilon) {
+                if (zeroCheck) std::cout << "Skipping b1 with irrep=" << init[i].irrep << "(" << init[i].irrepRow << ") and momType=" << init[i].momType << std::endl;
+                skipCount++;
+                continue;
+            }
             for (int j = 0; j < cur.size(); j++) {
-                if (abs(cur[j].coeff) < epsilon) continue;
+                if (abs(cur[j].coeff) < epsilon) {
+                    if (zeroCheck) std::cout << "Skipping current with irrep=" << cur[j].irrep << "(" << cur[j].irrepRow << ") and momType=" << cur[j].momType << std::endl;
+                    skipCount++;
+                    continue;
+                }
                 for (int k = 0; k < fin.size(); k++) {
-                    if (abs(fin[k].coeff) < epsilon) continue;
-                    double coeff = init[i].coeff * cur[j].coeff * fin[k].coeff;
+                    if (abs(fin[k].coeff) < epsilon) {
+                        if (zeroCheck) std::cout << "Skipping pion with irrep=" << fin[k].irrep << "(" << fin[k].irrepRow << ") and momType=" << fin[k].momType << std::endl;
+                        skipCount++;
+                        continue;
+                    }
+                    Qsq = getQsq(init[i], fin[k]);
+                    coeffs.push_back(init[i].coeff * cur[j].coeff * fin[k].coeff);
                     kin.clear();
                     kin = kinFactors(init[i], cur[j], fin[k]);
+                    kins.push_back(kin);
                     #if 0
                     std::cout << "Kinematic factors for state " << i << " " << j << " " << k << ": ";
                     std::cout << "E1 = " << kin[0];
                     std::cout << ", C1 = " << kin[1] << std::endl;
                     #endif
-                    kFactors.push_back(kin);
-                    cd Qsq = getQsq(init[i], fin[k]);
+                    /** ///////////////////////////////////////////////
+                     * Need to fix HERE 
+                     * kFactors should have same indices as outsttrings
+                     * *///////////////////////////////////////////////
 
-                    std::string out = "Qsq=" + basics::formatValue(Qsq.real()) + ", ";
-                    out += "coeff=" + basics::formatValue(coeff) + ", ";
-                    out += "b1(";
-                    out += std::to_string(init[i].mom3_i[0]) + std::to_string(init[i].mom3_i[1]) + std::to_string(init[i].mom3_i[2]) + ") ";
-                    out += init[i].irrep + "(" + std::to_string(init[i].irrepRow) + "), ";
-                    out += "q(";                    
-                    out += std::to_string(cur[j].mom3_i[0]) + std::to_string(cur[j].mom3_i[1]) + std::to_string(cur[j].mom3_i[2]) + ") ";
-                    out += cur[j].irrep + "(" + std::to_string(cur[j].irrepRow) + "), ";
-                    out += "pion(";
-                    out += std::to_string(fin[k].mom3_i[0]) + std::to_string(fin[k].mom3_i[1]) + std::to_string(fin[k].mom3_i[2]) + ") ";
-                    out += fin[k].irrep + "(" + std::to_string(fin[k].irrepRow) + "), ";
-                    out += "E1=(" + basics::formatValue(kin[0].real()) + ", " + basics::formatValue(kin[0].imag()) + "), ";
-                    out += "C1=(" + basics::formatValue(kin[1].real()) + ", " + basics::formatValue(kin[1].imag()) + ")";
-                    outstring.push_back(out);
+                    kFactors.push_back(kin);
+                    indices.push_back({i, j, k});                    
+                    totalCount++;
                 }
             }
         }
+        #if 0
+        if (zeroCheck) std::cout << "Skipped " << skipCount << " states with zero coefficient.    ";
+        if (zeroCheck) std::cout << "Calculated " << totalCount << " kinematic factors." << std::endl;
+        #endif
+
+        if (totalCount == 0) return false;
+
+        out = "Qsq=" + basics::formatValue(Qsq.real()) + ", ";
+        out += "b1(";
+        out += std::to_string(init[0].mom3_i[0]) + std::to_string(init[0].mom3_i[1]) + std::to_string(init[0].mom3_i[2]) + ") ";
+        out += init[0].irrep + "(" + std::to_string(init[0].irrepRow) + "), ";
+        out += "q(";                    
+        out += std::to_string(cur[0].mom3_i[0]) + std::to_string(cur[0].mom3_i[1]) + std::to_string(cur[0].mom3_i[2]) + ") ";
+        out += cur[0].irrep + "(" + std::to_string(cur[0].irrepRow) + "), ";
+        out += "pion(";
+        out += std::to_string(fin[0].mom3_i[0]) + std::to_string(fin[0].mom3_i[1]) + std::to_string(fin[0].mom3_i[2]) + ") ";
+        out += fin[0].irrep + "(" + std::to_string(fin[0].irrepRow) + ")\n";
+        for (int i = 0; i < totalCount; i++) {
+            out += "     b1_hel=" + std::to_string(init[indices[i][0]].helicity) + ", ";
+            out += "q_hel=" + std::to_string(cur[indices[i][1]].helicity) + ", ";
+            out += "coeff=" + basics::formatValue(coeffs[i]) + ", ";
+            out += "E1=(" + basics::formatValue(kins[i][0].real()) + ", " + basics::formatValue(kins[i][0].imag()) + "), ";
+            out += "C1=(" + basics::formatValue(kins[i][1].real()) + ", " + basics::formatValue(kins[i][1].imag()) + ")";
+            if (i != totalCount - 1) out += "\n";
+        }
+        outstring.push_back(out);
+        return true;
     }
 
     cd matelem::getQsq(state& in, state& out) {

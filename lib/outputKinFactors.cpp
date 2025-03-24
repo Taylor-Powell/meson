@@ -146,20 +146,23 @@ namespace kinFactors {
                     // Create the matrix element container, then calculate the kinematic factors and append them to the output container
                     matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
                     m.subductAll(true);
-                    m.calcKinFactors();
+                    bool anythingUseful = m.calcKinFactors();
 
-                    // Append m.kFactors to kFactors using m.getKinFactors()
-                    std::vector<std::vector<cd>> kF = m.getKinFactors();
-                    kFactors.insert(kFactors.end(), kF.begin(), kF.end());
-                    // Append m.outstring to outStrings using m.getOutStrings()
-                    std::vector<std::string> oS = m.getOutStrings();
-                    outStrings.insert(outStrings.end(), oS.begin(), oS.end());
+                    if (anythingUseful) {
+                        // Append m.kFactors to kFactors using m.getKinFactors()
+                        std::vector<std::vector<cd>> kF = m.getKinFactors();
+                        kFactors.insert(kFactors.end(), kF.begin(), kF.end());
+                        // Append m.outstring to outStrings using m.getOutStrings()
+                        std::vector<std::string> oS = m.getOutStrings();
+                        outStrings.insert(outStrings.end(), oS.begin(), oS.end());
+                    }
                 }
             }           
 
             
             // sort kFactors and outStrings by Q_sq
             std::vector<std::pair<double, int>> QsqIndex;
+            std::cout << "There are " << kFactors.size() << " kinematic factors." << std::endl;
             for (int i = 0; i < kFactors.size(); i++) {
                 QsqIndex.push_back(std::make_pair(kFactors[i][0].real(), i));
             }
@@ -167,6 +170,7 @@ namespace kinFactors {
             for (int i = 0; i < QsqIndex.size(); i++) {
                 int index = QsqIndex[i].second;
                 fout << outStrings[index] << std::endl;
+                std::cout << "idx=" << index << ": " << outStrings[index] << std::endl;
             }
             fout.close();
         }
