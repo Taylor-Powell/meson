@@ -43,7 +43,7 @@ namespace matelem {
         std::string params, momType, irrep, sym;
         int V, irrepRow, helicity, spin, absHel, parity, etaTilde;
         double E, Eerr, mState;
-        cd coeff;
+        double coeff;
     };
 
     class matelem {

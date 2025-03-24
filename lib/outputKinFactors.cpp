@@ -195,7 +195,7 @@ namespace kinFactors {
                 s.irrepRow = 1;
                 for (int j = 0; j < perms.size(); j++) {
                     s.mom3_i = perms[j];
-                    tuples.push_back(s); // Always push back the irrepRow 0 tuple
+                    tuples.push_back(s); // Always push back the irrepRow 1 tuple
                     if (s.irrep == "E2") { // 2-dimensional irreps
                         s.irrepRow = 2;
                         tuples.push_back(s);
@@ -237,7 +237,7 @@ namespace kinFactors {
             s.irrepRow = 1;
             for (int j = 0; j < perms.size(); j++) {
                 s.mom3_i = perms[j];
-                tuples.push_back(s); // Always push back the irrepRow 0 tuple
+                tuples.push_back(s); // Always push back the irrepRow 1 tuple
                 if (s.irrep == "E2") { // 2-dimensional irreps
                     s.irrepRow = 2;
                     tuples.push_back(s);

@@ -37,27 +37,37 @@ namespace matelem {
     }
     
     void matelem::calcKinFactors() {
-        std::cout << "Calculating kinematic factors..." << std::endl;
+        // std::cout << "Calculating kinematic factors..." << std::endl;
         std::vector<cd> kin;
+        double epsilon = 1e-10;
         for (int i = 0; i < init.size(); i++) {
+            if (abs(init[i].coeff) < epsilon) continue;
             for (int j = 0; j < cur.size(); j++) {
+                if (abs(cur[j].coeff) < epsilon) continue;
                 for (int k = 0; k < fin.size(); k++) {
+                    if (abs(fin[k].coeff) < epsilon) continue;
+                    double coeff = init[i].coeff * cur[j].coeff * fin[k].coeff;
+                    kin.clear();
                     kin = kinFactors(init[i], cur[j], fin[k]);
-                    #if 1
+                    #if 0
                     std::cout << "Kinematic factors for state " << i << " " << j << " " << k << ": ";
                     std::cout << "E1 = " << kin[0];
                     std::cout << ", C1 = " << kin[1] << std::endl;
                     #endif
                     kFactors.push_back(kin);
                     cd Qsq = getQsq(init[i], fin[k]);
-                    
 
                     std::string out = "Qsq=" + basics::formatValue(Qsq.real()) + ", ";
+                    out += "coeff=" + basics::formatValue(coeff) + ", ";
                     out += "b1(";
                     out += std::to_string(init[i].mom3_i[0]) + std::to_string(init[i].mom3_i[1]) + std::to_string(init[i].mom3_i[2]) + ") ";
                     out += init[i].irrep + "(" + std::to_string(init[i].irrepRow) + "), ";
-                    out += "q(";                    out += std::to_string(cur[j].mom3_i[0]) + std::to_string(cur[j].mom3_i[1]) + std::to_string(cur[j].mom3_i[2]) + ") ";
+                    out += "q(";                    
+                    out += std::to_string(cur[j].mom3_i[0]) + std::to_string(cur[j].mom3_i[1]) + std::to_string(cur[j].mom3_i[2]) + ") ";
                     out += cur[j].irrep + "(" + std::to_string(cur[j].irrepRow) + "), ";
+                    out += "pion(";
+                    out += std::to_string(fin[k].mom3_i[0]) + std::to_string(fin[k].mom3_i[1]) + std::to_string(fin[k].mom3_i[2]) + ") ";
+                    out += fin[k].irrep + "(" + std::to_string(fin[k].irrepRow) + "), ";
                     out += "E1=(" + basics::formatValue(kin[0].real()) + ", " + basics::formatValue(kin[0].imag()) + "), ";
                     out += "C1=(" + basics::formatValue(kin[1].real()) + ", " + basics::formatValue(kin[1].imag()) + ")";
                     outstring.push_back(out);
