@@ -36,9 +36,9 @@ namespace kinFactors {
                     s.mom3_i = basics::getMom3_i(momstr);
                     s.momType = basics::getMomType(s.mom3_i);
                     s.params = var;
-                    tempFile = "data/kinFactors_V_" + std::to_string(s.V);
-                    tempFile += "_b1mom_" + momstr;
-                    tempFile += "_irrep_" + s.irrep;
+                    tempFile = "data/kinFactors_V" + std::to_string(s.V);
+                    tempFile += "_b1(" + momstr + ")";
+                    tempFile += "_" + s.irrep;
                     tempFile+= "_E_" + std::to_string(s.E).substr(0, std::to_string(s.E).find('.') + 6);
                     double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
                     s.irrepRow = 1;
@@ -100,8 +100,8 @@ namespace kinFactors {
         // These are fixed for each qMom, so only need to be calculated once 
         std::vector<stateTuple> qTuples;
         for (int i = 0; i < qMomList.size(); i++) {
-            // Use version allowing for absHel = {0, 1}
-            std::vector<stateTuple> temp = getTuples(qMomList[i], parity, spin);
+            // Use version allowing for absHel = {0, 1} and no mom3_i rotations
+            std::vector<stateTuple> temp = getTuples(qMomList[i], -1, 1, false);
             qTuples.insert(qTuples.end(), temp.begin(), temp.end());
         }
 
@@ -177,7 +177,7 @@ namespace kinFactors {
     }
 
     /** Overloaded function to get the tuples {mom3_i, irrep, irrepRow} over which to iterate. */
-    std::vector<stateTuple> Data::getTuples(const std::vector<int> mom3_i, int parity, int spin) {
+    std::vector<stateTuple> Data::getTuples(const std::vector<int> mom3_i, int parity, int spin, bool allowRotations) {
         // Initialize the output vector and the stateTuple struct
         std::vector<stateTuple> tuples;
         stateTuple s;
@@ -190,8 +190,10 @@ namespace kinFactors {
             s.momType = basics::getMomType(mom3_i);
             std::vector<std::string> irreps = basics::getIrreps(mom3_i, parity, spin);
 
-            // Get the permutations of the mom3_i
-            basics::vec2D<int> perms = basics::getMomPerms(mom3_i);
+            // Get the permutations of the mom3_i, if allowed
+            basics::vec2D<int> perms;
+            if (allowRotations) perms = basics::getMomPerms(mom3_i);
+            else perms.push_back(mom3_i);
 
             // Iterate over the irreps and permutations to get the tuples
             for (int i = 0; i < irreps.size(); i++) {            
@@ -216,8 +218,10 @@ namespace kinFactors {
         return tuples;
     }
 
-    /** Overloaded function to get the tuples {mom3_i, irrep, irrepRow} over which to iterate. */
-    std::vector<stateTuple> Data::getTuples(const std::vector<int> mom3_i, int parity, int spin, int targetAbsHel) {
+    /** Overloaded function to get the tuples {mom3_i, irrep, irrepRow} over which to iterate. 
+     * This version allows for a specific targetAbsHel to be set.
+    */
+    std::vector<stateTuple> Data::getTuples(const std::vector<int> mom3_i, int parity, int spin, int targetAbsHel, bool allowRotations) {
         // Initialize the output vector and the stateTuple struct
         std::vector<stateTuple> tuples;
         stateTuple s;
@@ -232,8 +236,10 @@ namespace kinFactors {
         s.momType = basics::getMomType(mom3_i);
         std::vector<std::string> irreps = basics::getIrreps(mom3_i, parity, spin);
 
-        // Get the permutations of the mom3_i
-        basics::vec2D<int> perms = basics::getMomPerms(mom3_i);
+        // Get the permutations of the mom3_i, if allowed
+        basics::vec2D<int> perms;
+        if (allowRotations) perms = basics::getMomPerms(mom3_i);
+        else perms.push_back(mom3_i);
 
         // Iterate over the irreps and permutations to get the tuples
         for (int i = 0; i < irreps.size(); i++) {            
@@ -270,19 +276,5 @@ namespace kinFactors {
             vals.push_back(std::pair(basics::subductHelicity(etaTilde, irrep, momType, -absHel, irrepRow), -absHel));
         }
         return vals;
-    }
-
-    // Another helper function to declutter Data::outputKinematics()
-    std::string Data::getPiParamString(const std::vector<int> piMom, double anis, double at_mpi, double twopi_chiL, int V) {
-        std::string pi_param = std::to_string(V) + " " + basics::getMomType(piMom);
-        if (piMom[0] == 0 && piMom[1] == 0 && piMom[2] == 0) {
-            pi_param += " A1 ";
-        }
-        else {
-            pi_param += " A2 ";
-        }
-        double Epi = std::sqrt(std::pow(at_mpi,2) + std::pow(twopi_chiL, 2) * basics::dot(piMom, piMom));
-        pi_param += std::to_string(Epi) + " 0.0";
-        return pi_param;
     }
 }

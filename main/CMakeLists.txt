@@ -1,6 +1,4 @@
 set(EXES
-    read_Ecm
-    EvsQsq_out
     subHelicity_test
     kinFactors_test
 )

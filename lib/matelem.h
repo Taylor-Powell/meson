@@ -64,7 +64,6 @@ namespace matelem {
             /** Default constructor */
             matelem() {}
             // Functions
-            void expandAllHelOps();
             void subductAll(bool isHelState = true);
             bool calcKinFactors();
             std::vector<std::vector<cd>> getKinFactors() { return kFactors; }
@@ -90,7 +89,6 @@ namespace matelem {
             std::vector<std::string> outstring;
 
             // Forward Declarations
-            void ExpandHelOps(std::vector<state>& s);
             void subductHelicityState(std::vector<state>& s);
             cd getOmegaVal(state& in, state& out);
             std::vector<cd> kinFactors(state& in, state& cur, state& out);

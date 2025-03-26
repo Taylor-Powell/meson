@@ -76,11 +76,4 @@ namespace rotations {
         rotPolVec(polz, sym, mom3_i);
         return polz;
     }
-
-    // std::vector<cd> getPol4_Jz(double E, double mom3_sq, const std::vector<int> mom3_i, int Jz, const std::string sym, bool current) {
-    //     std::vector<cd> polz = getPolz4(E, mom3_sq, Jz, current);
-    //     rotPolVec_init(polz, sym);
-    //     rotPolVec(polz, sym, mom3_i);
-    //     return polz;
-    // }
 }

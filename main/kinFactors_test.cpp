@@ -11,8 +11,8 @@ namespace {
     typedef std::vector<int> ivec;
     typedef basics::vec2D<int> ivec2D;
     
-    // ivec2D qMomList {{0,0,0},{0,0,1},{0,1,1},{1,1,1},{0,0,2}};
-    ivec2D qMomList {{0,0,1}};
+    ivec2D qMomList {{0,0,0},{0,0,1},{0,1,1},{1,1,1},{0,0,2}};
+    // ivec2D qMomList {{0,0,1}};
 }
 int main(int argc, char** argv)
 {

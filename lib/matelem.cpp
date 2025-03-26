@@ -21,19 +21,12 @@ namespace matelem {
         polVec = rotations::getPol4_hel(E, mom3_sq, mom3_i, helicity, sym, current);
     }
 
-    void matelem::expandAllHelOps() {
-        ExpandHelOps(init);
-        ExpandHelOps(cur);
-        ExpandHelOps(fin);
-    }
-
     void matelem::subductAll(bool isHelState) {
         if (!isHelState) {
             throw std::string("subductAll called with isHelState = false.\n");
         }
         double eps = 1e-10;
         bool zeroCheck = false;
-
         #if 0
         zeroCheck = true;
         #endif
@@ -175,24 +168,6 @@ namespace matelem {
             sTemp.coeff *= basics::subductHelicity(sTemp.etaTilde, sTemp.irrep, sTemp.momType, sTemp.helicity, sTemp.irrepRow);
             s.push_back(sTemp);
         }
-    }
-    
-    void matelem::ExpandHelOps(std::vector<state>& s) {
-        // std::vector<state> s2;
-        // for (int i = 0; i < s.size(); i++) {
-        //     state sTemp;
-        //     std::vector<double> angles;
-        //     std::vector<state> newStates;
-        //     for (int i = 0; i <= 2 * s[i].spin + 1; i++) {
-        //         sTemp = s[i];
-        //         angles = rotations::getRotAngles(sTemp.sym, sTemp.mom3_i);
-        //         sTemp.spinZ = -s[i].spin + i;
-        //         sTemp.coeff *= std::conj(WignerD::Wigner_D(s[i].spin, s[i].spinZ, s[i].helicity, angles[0], angles[1], angles[2]));
-        //         newStates.push_back(sTemp);
-        //     }
-        //     s2.insert(s2.end(), newStates.begin(), newStates.end());
-        // }
-        // s = s2;
     }
 
     cd matelem::getOmegaVal(state& in, state& out) { // Checked

@@ -44,8 +44,8 @@ namespace kinFactors {
             int inAbsHelicity, outAbsHelicity;
 
             // Convenience functions for outputKinematics
-            std::vector<stateTuple> getTuples(const std::vector<int> mom3_i, int parity, int spin);
-            std::vector<stateTuple> getTuples(const std::vector<int> mom3_i, int parity, int spin, int absHelMax);
+            std::vector<stateTuple> getTuples(const std::vector<int> mom3_i, int parity, int spin, bool allowRotations = true);
+            std::vector<stateTuple> getTuples(const std::vector<int> mom3_i, int parity, int spin, int targetAbsHel, bool allowRotations = true);
             std::vector<std::pair<cd, int>> getHelCoeffs(int etaTilde, std::string momType, std::string irrep, int irrepRow, int spin);
             std::string getPiParamString(const std::vector<int> mom3_i, double anis, double at_mpi, double twopi_chiL, int V);
     };
