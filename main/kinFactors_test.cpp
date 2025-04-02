@@ -1,6 +1,7 @@
 #include <fstream>
 #include <algorithm>
-#include "../lib/outputKinFactors.h"
+#include "outputKinFactors.h"
+#include "errorHandling.h"
 
 namespace {
     int usage(int argc, char** argv) {
@@ -27,8 +28,8 @@ int main(int argc, char** argv)
         // d.printParams();
         d.outputKinematics(qMomList);
     }
-    catch (std::string s) {
-        std::cout << "\n\nERROR IN PROGRAM:\n" << s << std::endl;
+    catch (...) {
+        error::processException();
         return -1;
     }
 

@@ -1,3 +1,4 @@
+#include <Eigen/Dense>
 #include <cmath>
 #include <vector>
 #include <algorithm>
@@ -209,16 +210,6 @@ namespace basics {
             mom3_i.push_back(momStr[i] - '0');
         }
         return mom3_i;
-    }
-
-    std::string getSym(const std::string momType) {
-        if (momType == "00n") return "Dic4";
-        else if (momType == "0nn") return "Dic2";
-        else if (momType == "nnn") return "Dic3";
-        else if (momType == "0mn") return "C40mn";
-        else if (momType == "nnm") return "C4nnm";
-        else if (momType == "000") return "OhD";
-        else throw std::string("Momentum " + momType + " not recognized in basics::getSym().\n");
     }
 
     /** Convert from mom3_i to string for momentum type. 

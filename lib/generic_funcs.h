@@ -9,6 +9,7 @@
 #include <string>
 #include <cmath>
 #include <complex>
+#include <Eigen/Dense>
 
 namespace {
     typedef std::complex<double> cd;
@@ -23,7 +24,7 @@ namespace basics {
     #define MIN(x,y) (x<y ? x : y)
 
     template <typename T>
-    std::string formatValue(T val) {
+    inline std::string formatValue(T val) {
         std::string str = std::to_string(val);
         if (str.find(".") != std::string::npos) {
             str = str.substr(0, str.find(".") + 5);
@@ -56,7 +57,7 @@ namespace basics {
     }
 
     template <typename T>
-    T kDelta(const T i, const T j) {
+    inline T kDelta(const T i, const T j) {
         return (i == j) ? 1 : 0;
     }
 
@@ -140,6 +141,56 @@ namespace basics {
         return -1; 
     }
 
+    /** function to solve for the ordinary least-squares solution to an overdetermined system 
+     * @param matrix: matrix of size (n, m) with n > m
+     * @param b: vector of size n
+     * @return: vector of size m with the least-squares solution
+    */
+    template <typename MatrixType, typename VectorType, typename T = typename MatrixType::Scalar>
+    VectorType leastSquares(const MatrixType& matrix, const VectorType& b) {
+        // If MatrixType is a vector of vectors, convert to Eigen::Matrix with scalar type <T>
+        if constexpr (std::is_same_v<MatrixType, std::vector<std::vector<T>>>) {
+            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> eigenMatrix(matrix.size(), matrix[0].size());
+            for (size_t i = 0; i < matrix.size(); ++i) {
+                for (size_t j = 0; j < matrix[i].size(); ++j) {
+                    eigenMatrix(i, j) = matrix[i][j];
+                }
+            }
+            return leastSquares(eigenMatrix, b);
+        } 
+        // If VectorType is a vector, convert to Eigen::Matrix with scalar type <T>
+        
+        else if constexpr (std::is_same_v<VectorType, std::vector<T>>) {
+            Eigen::Matrix<T, Eigen::Dynamic, 1> eigenVector(b.size());
+            for (size_t i = 0; i < b.size(); ++i) {
+                eigenVector(i) = b[i];
+            }
+            return leastSquares(matrix, eigenVector);
+        }
+
+        // If matrix is square, solve directly
+        if (matrix.rows() == matrix.cols()) { return matrix.inverse() * b; }
+
+// Check if the matrix is underdetermined
+        if (matrix.rows() < matrix.cols()) {
+            throw std::invalid_argument("Matrix is underdetermined in basics::leastSquares.");
+        }
+        
+        // Use QR decomposition for least-squares solution
+        return matrix.colPivHouseholderQr().solve(b);
+    }
+    
+    // Convenience function
+    inline std::string getSym(const std::string momType) {
+        if (momType == "00n") return "Dic4";
+        else if (momType == "0nn") return "Dic2";
+        else if (momType == "nnn") return "Dic3";
+        else if (momType == "0mn") return "C40mn";
+        else if (momType == "nnm") return "C4nnm";
+        else if (momType == "000") return "OhD";
+        else throw std::string("Momentum " + momType + " not recognized in basics::getSym().\n");
+    }
+
     /////////////////// Forward declarations ///////////////////
 
     // Overloaded function to get all permutations of a 3-momentum
@@ -161,10 +212,18 @@ namespace basics {
     std::vector<int> getMom3_i(const std::string momStr);
 
     // Convenience function
-    std::string getSym(const std::string momType);
-
-    // Convenience function
     std::string getMomType(const std::vector<int> mom3_i);
+
+    // Test function for Eigen
+    void computeGramMatrix(const std::vector<std::vector<double>>& mat) {
+        // Map mat to a MatrixXd
+        Eigen::MatrixXd eigenMat(mat.size(), mat[0].size());
+        for (size_t i = 0; i < mat.size(); ++i) {
+            for (size_t j = 0; j < mat[i].size(); ++j) {
+                eigenMat(i, j) = mat[i][j];
+            }
+        }
+    }
 }
 
 #endif

@@ -25,135 +25,97 @@ namespace matelem {
         if (!isHelState) {
             throw std::string("subductAll called with isHelState = false.\n");
         }
-        double eps = 1e-10;
-        bool zeroCheck = false;
-        #if 0
-        zeroCheck = true;
+
+        // Helper lambda for debug output
+        #if 1
+        auto debugZeroCoeff = [&](const state& s, const std::string& type) {
+            double eps = 1e-10;
+            if (std::abs(s.coeff) < eps) {
+                std::cout << "Zero for " << type << "(" << std::to_string(s.mom3_i[0]) 
+                          << std::to_string(s.mom3_i[1]) << std::to_string(s.mom3_i[2]) << ") ";
+                std::cout << s.irrep << "(" << s.irrepRow << ") etaTilde=" << s.etaTilde;
+                std::cout << ", hel=" << s.helicity << std::endl;
+            }
+        };
+        #else
+        auto debugZeroCoeff = [&](const state& s, const std::string& type) {};
         #endif
 
+        // Subduct helicity states and check for zero coefficients
         subductHelicityState(init);
-        if (zeroCheck) for (int i = 0; i < init.size(); i++) {
-            if (std::abs(init[i].coeff) < eps) {
-                std::cout << "Zero for b1(" << std::to_string(init[i].mom3_i[0]) << std::to_string(init[i].mom3_i[1]) << std::to_string(init[i].mom3_i[2]) << ") ";
-                std::cout << init[i].irrep << "(" << init[i].irrepRow << ") etaTilde=" << init[i].etaTilde;
-                std::cout << ", hel=" << init[i].helicity << std::endl;
-            }
-        }
+        for (const auto& s : init) { debugZeroCoeff(s, "b1"); }
+
         subductHelicityState(cur);
-        if (zeroCheck) for (int i = 0; i < cur.size(); i++) {
-            if (std::abs(cur[i].coeff) < eps) {
-                std::cout << "Zero for current(" << std::to_string(cur[i].mom3_i[0]) << std::to_string(cur[i].mom3_i[1]) << std::to_string(cur[i].mom3_i[2]) << ") ";
-                std::cout << cur[i].irrep << "(" << cur[i].irrepRow << ") etaTilde=" << cur[i].etaTilde;
-                std::cout << ", hel=" << cur[i].helicity << std::endl;
-            }
-        }
+        for (const auto& s : cur) { debugZeroCoeff(s, "current"); }
+
         subductHelicityState(fin);
-        if (zeroCheck) for (int i = 0; i < fin.size(); i++) {
-            if (std::abs(fin[i].coeff) < eps) {
-                std::cout << "Zero for pion(" << std::to_string(fin[i].mom3_i[0]) << std::to_string(fin[i].mom3_i[1]) << std::to_string(fin[i].mom3_i[2]) << ") ";
-                std::cout << fin[i].irrep << "(" << fin[i].irrepRow << ") etaTilde=" << fin[i].etaTilde;
-                std::cout << ", hel=" << fin[i].helicity << std::endl;
-            }
-        }
+        for (const auto& s : fin) { debugZeroCoeff(s, "pion"); }
     }
     
     bool matelem::calcKinFactors() {
         // std::cout << "Calculating kinematic factors..." << std::endl;
         std::vector<cd> kin;
-        std::vector<std::vector<cd>> kins;
         std::vector<std::vector<int>> indices;
         std::vector<double> coeffs;
-        cd Qsq = 0.0;
-        std::string out;
         double epsilon = 1e-10;
         int skipCount = 0, totalCount = 0;
-        bool zeroCheck = false;
 
-        #if 0
-        zeroCheck = true;
-        #endif
+        // Helper lambda to check if a subducted state has a zero coefficient
+        auto zeroCoeff = [&](const state& s, const std::string& state) {
+            if (std::abs(s.coeff) < epsilon) {
+                #if 0
+                std::cout << "Skipping " << state << " with irrep=" << s.irrep
+                          << "(" << s.irrepRow << ") and momType=" << s.momType 
+                          << std::endl;
+                skipCount++;
+                #endif
+                return true;
+            }
+            return false;
+        };
 
         for (int i = 0; i < init.size(); i++) {
-            if (abs(init[i].coeff) < epsilon) {
-                if (zeroCheck) std::cout << "Skipping b1 with irrep=" << init[i].irrep << "(" << init[i].irrepRow << ") and momType=" << init[i].momType << std::endl;
-                skipCount++;
-                continue;
-            }
+            if (zeroCoeff(init[i], "b1")) continue;
+
             for (int j = 0; j < cur.size(); j++) {
-                if (abs(cur[j].coeff) < epsilon) {
-                    if (zeroCheck) std::cout << "Skipping current with irrep=" << cur[j].irrep << "(" << cur[j].irrepRow << ") and momType=" << cur[j].momType << std::endl;
-                    skipCount++;
-                    continue;
-                }
+                if (zeroCoeff(cur[j], "current")) continue;
+
                 for (int k = 0; k < fin.size(); k++) {
-                    if (abs(fin[k].coeff) < epsilon) {
-                        if (zeroCheck) std::cout << "Skipping pion with irrep=" << fin[k].irrep << "(" << fin[k].irrepRow << ") and momType=" << fin[k].momType << std::endl;
-                        skipCount++;
-                        continue;
-                    }
-                    Qsq = getQsq(init[i], fin[k]);
+                    if (zeroCoeff(fin[k], "pion")) continue;
+
                     coeffs.push_back(init[i].coeff * cur[j].coeff * fin[k].coeff);
                     kin.clear();
                     kin = kinFactors(init[i], cur[j], fin[k]);
-                    kins.push_back(kin);
                     #if 0
                     std::cout << "Kinematic factors for state " << i << " " << j << " " << k << ": ";
                     std::cout << "E1 = " << kin[0];
                     std::cout << ", C1 = " << kin[1] << std::endl;
                     #endif
-                    /** ///////////////////////////////////////////////
-                     * Need to fix HERE 
-                     * kFactors should have same indices as outsttrings
-                     * *///////////////////////////////////////////////
 
-                    kFactors.push_back(kin);
+                    outStruct.kFactors.push_back(kin);
+                    outStruct.helicity.push_back(cur[j].helicity);
                     indices.push_back({i, j, k});                    
                     totalCount++;
                 }
             }
         }
         #if 0
-        if (zeroCheck) std::cout << "Skipped " << skipCount << " states with zero coefficient.    ";
-        if (zeroCheck) std::cout << "Calculated " << totalCount << " kinematic factors." << std::endl;
+        std::cout << "Skipped " << skipCount << " states with zero coefficient.    ";
+        std::cout << "Calculated " << totalCount << " kinematic factors." << std::endl;
         #endif
 
+        // If no kinematic factors were calculated, return false
         if (totalCount == 0) return false;
 
-        out = "Qsq=" + basics::formatValue(Qsq.real()) + ", ";
-        out += "b1(";
-        out += std::to_string(init[0].mom3_i[0]) + std::to_string(init[0].mom3_i[1]) + std::to_string(init[0].mom3_i[2]) + ") ";
-        out += init[0].irrep + "(" + std::to_string(init[0].irrepRow) + "), ";
-        out += "q(";                    
-        out += std::to_string(cur[0].mom3_i[0]) + std::to_string(cur[0].mom3_i[1]) + std::to_string(cur[0].mom3_i[2]) + ") ";
-        out += cur[0].irrep + "(" + std::to_string(cur[0].irrepRow) + "), ";
-        out += "pion(";
-        out += std::to_string(fin[0].mom3_i[0]) + std::to_string(fin[0].mom3_i[1]) + std::to_string(fin[0].mom3_i[2]) + ") ";
-        out += fin[0].irrep + "(" + std::to_string(fin[0].irrepRow) + ")\n";
-        for (int i = 0; i < totalCount; i++) {
-            out += "     b1_hel=" + std::to_string(init[indices[i][0]].helicity) + ", ";
-            out += "q_hel=" + std::to_string(cur[indices[i][1]].helicity) + ", ";
-            out += "coeff=" + basics::formatValue(coeffs[i]) + ", ";
-            out += "E1=(" + basics::formatValue(kins[i][0].real()) + ", " + basics::formatValue(kins[i][0].imag()) + "), ";
-            out += "C1=(" + basics::formatValue(kins[i][1].real()) + ", " + basics::formatValue(kins[i][1].imag()) + ")";
-            if (i != totalCount - 1) out += "\n";
-        }
-        outstring.push_back(out);
+        // Format the output string
+        // outStruct
+        outStruct.outstring = formatOutString(coeffs, indices);
         return true;
     }
 
-    cd matelem::getQsq(state& in, state& out) {
-        bool print = false;
-        #if 0
-        print = true;
-        #endif
-        
+    cd matelem::getQsq(const state& in, const state& out) { // Checked
         std::vector<cd> qMom;
-        if (print) std::cout << "qMom = ";
-        for (int i = 0; i < 4; i++) {
-            qMom.push_back(out.mom4[i] - in.mom4[i]);
-            if (print) std::cout << out.mom4[i] << " - " << in.mom4[i] << " = " << qMom[i] << ", ";
-        }
-        if (print) std::cout << "qMom size = " << qMom.size() << std::endl;
+        for (int i = 0; i < 4; i++) { qMom.push_back(out.mom4[i] - in.mom4[i]); }
         return (-1.0) * basics::fourDot(qMom, qMom);
     }
 
@@ -170,13 +132,13 @@ namespace matelem {
         }
     }
 
-    cd matelem::getOmegaVal(state& in, state& out) { // Checked
+    cd matelem::getOmegaVal(const state& in, const state& out) { // Checked
         cd val = std::pow(basics::fourDot(in.mom4, out.mom4), 2);
         val -= std::pow(in.mState, 2) * std::pow(out.mState, 2);        
         return val;
     }
 
-    std::vector<cd> matelem::kinFactors(state& in, state& cur, state& out) { // Checked
+    std::vector<cd> matelem::kinFactors(const state& in, const state& cur, const state& out) { // Checked
         std::vector<cd> kin;
         cd Omega = getOmegaVal(in, out);
         cd tempVal;
@@ -219,7 +181,6 @@ namespace matelem {
         // Calculate Qsq
         kin.push_back(getQsq(in, out));
 
-
         // Calculate the E1 coefficient
         std::vector<cd> Ecoeff;
         for (int i = 0; i < 4; i++) { // Checked
@@ -230,7 +191,6 @@ namespace matelem {
             Ecoeff.push_back(tempVal);
         }
         kin.push_back(basics::fourDot(Ecoeff, cur.polVec));
-
 
         // Calculate the C1 coefficient
         std::vector<cd> Ccoeff;
@@ -247,4 +207,31 @@ namespace matelem {
 
         return kin;
     }
+
+    // Helper function to format the output string
+    std::string matelem::formatOutString(const std::vector<double>& coeffs, const std::vector<std::vector<int>>& indices) {
+        std::ostringstream oss;
+
+        // Format the header information
+        oss << "Qsq=" << basics::formatValue(Qsq.real()) << ", ";
+        oss << "b1(" << init[0].mom3_i[0] << init[0].mom3_i[1] << init[0].mom3_i[2] << ") ";
+        oss << init[0].irrep << "(" << init[0].irrepRow << "), ";
+        oss << "q(" << cur[0].mom3_i[0] << cur[0].mom3_i[1] << cur[0].mom3_i[2] << ") ";
+        oss << cur[0].irrep << "(" << cur[0].irrepRow << "), ";
+        oss << "pion(" << fin[0].mom3_i[0] << fin[0].mom3_i[1] << fin[0].mom3_i[2] << ") ";
+        oss << fin[0].irrep << "(" << fin[0].irrepRow << ")\n";
+
+        // Format the kinematic factors
+        for (int i = 0; i < outStruct.kFactors.size(); i++) {
+            oss << "     b1_hel=" << init[indices[i][0]].helicity << ", ";
+            oss << "q_hel=" << cur[indices[i][1]].helicity << ", ";
+            oss << "coeff=" << basics::formatValue(coeffs[i]) << ", ";
+            oss << "E1=(" << basics::formatValue(outStruct.kFactors[i][0].real()) << ", " << basics::formatValue(outStruct.kFactors[i][0].imag()) << "), ";
+            oss << "C1=(" << basics::formatValue(outStruct.kFactors[i][1].real()) << ", " << basics::formatValue(outStruct.kFactors[i][1].imag()) << ")";
+            if (i != outStruct.kFactors.size() - 1) oss << "\n";
+        }
+
+        return oss.str();
+    }
 }
+

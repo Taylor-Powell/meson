@@ -46,6 +46,13 @@ namespace matelem {
         double coeff;
     };
 
+    struct outputStruct {
+        std::string outstring;
+        cd Qsq;
+        std::vector<std::vector<cd>> kFactors;
+        std::vector<int> helicity;
+    };
+
     class matelem {
         public:
             /** Constructor for matelem
@@ -60,20 +67,22 @@ namespace matelem {
                 init.push_back(in);
                 cur.push_back(J);
                 fin.push_back(out);
+                Qsq = getQsq(in, out);
+                outStruct.Qsq = Qsq;
             }
             /** Default constructor */
             matelem() {}
+
             // Functions
             void subductAll(bool isHelState = true);
+            cd getQsq(const state& in, const state& out);
             bool calcKinFactors();
-            std::vector<std::vector<cd>> getKinFactors() { return kFactors; }
-            std::vector<std::string> getOutStrings() { return outstring; }
-            void writeKinFactors(std::ofstream& fout) {
-                for (int i = 0; i < outstring.size(); i++) {
-                    fout << outstring[i] << std::endl;
-                }
-            }
-            cd getQsq(state& in, state& out);
+
+            // Inline functions
+            inline std::vector<std::vector<cd>> getKinFactors() { return outStruct.kFactors; }
+            inline std::string getOutString() { return outStruct.outstring; }
+            inline void writeKinFactors(std::ofstream& fout) { fout << outStruct.outstring << std::endl; }
+            inline outputStruct getOutStruct() { return outStruct; }
             // Destructor
             ~matelem() {}
 
@@ -84,14 +93,15 @@ namespace matelem {
         private:
             // Variables
             std::vector<state> init, cur, fin;
-            std::vector<std::vector<cd>> kFactors;
-            std::vector<std::vector<double>> outVals;
-            std::vector<std::string> outstring;
+            cd Qsq;
+            outputStruct outStruct;
+            
 
             // Forward Declarations
             void subductHelicityState(std::vector<state>& s);
-            cd getOmegaVal(state& in, state& out);
-            std::vector<cd> kinFactors(state& in, state& cur, state& out);
+            cd getOmegaVal(const state& in, const state& out);
+            std::vector<cd> kinFactors(const state& in, const state& cur, const state& out);
+            std::string formatOutString(const std::vector<double>& coeffs, const std::vector<std::vector<int>>& indices);
     };
 
 }
