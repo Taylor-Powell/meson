@@ -25,6 +25,7 @@ namespace basics {
 
     template <typename T>
     inline std::string formatValue(T val) {
+        static_assert(std::is_arithmetic<T>::value, "formatValue requires a numeric type.");
         std::string str = std::to_string(val);
         if (str.find(".") != std::string::npos) {
             str = str.substr(0, str.find(".") + 5);
@@ -35,10 +36,11 @@ namespace basics {
 
     template <typename T> // From Numerical Recipes
     T factorial(const int n) {
+        static_assert(std::is_arithmetic<T>::value, "factorial requires a numeric type.");
         static int ntop = 4;
         static T a[33] = {1.0, 1.0, 2.0, 6.0, 24.0};
         int j;
-        if (n < 0) throw std::string("Negative factorial in routine factorial");
+        if (n < 0) throw std::domain_error("Negative factorial in routine factorial");
         if (n > 32) return std::exp(std::lgamma(n + 1.0));
         while (ntop < n) {
             j = ntop++;
@@ -51,7 +53,7 @@ namespace basics {
     T dot(const std::vector<T>& v1, const std::vector<T>& v2) {
         T val = T();
         if (v1.size() != v2.size()) 
-            throw std::string("Attempting to dot vectors of unequal size.\n");
+            throw std::invalid_argument("Attempting to dot vectors of unequal size.\n");
         for (int i = 0; i < v1.size(); i++) val += v1[i] * v2[i];
         return val;
     }
@@ -64,14 +66,17 @@ namespace basics {
     template <typename T>
     T fourDot(const std::vector<T>& v1, const std::vector<T>& v2) {
         if (v1.size() != 4 || v2.size() != 4)
-            throw std::string("Attempting fourDot vector(s) with size != 4.\n");
+            throw std::invalid_argument("Attempting fourDot vector(s) with size != 4.\n");
         return v1[0] * v2[0] - (v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3]);
     }
 
     template <typename T>
     vec2D<T> matMult(const vec2D<T>& A, const vec2D<T>& B) {
+        if (A.empty() || B.empty()) {
+            throw std::invalid_argument("Matrices must be non-empty in basics::matMult.");
+        }
         if (A[0].size() != B.size())
-            throw std::string("Attempting to multiply matrices of incompatible sizes.\n");
+            throw std::invalid_argument("Attempting to multiply matrices of incompatible sizes.\n");
         // Initialize C as empty matrix of size A.rows x B.cols
         vec2D<T> C(A.size(), std::vector<T>(B[0].size(), T()));
         for (int i = 0; i < A.size(); i++)
@@ -83,8 +88,11 @@ namespace basics {
 
     template <typename T>
     std::vector<T> matVecMult(const vec2D<T>& A, const std::vector<T>& v) {
+        if (A.empty()) {
+            throw std::invalid_argument("Matrix must be non-empty in basics::matVecMult.");
+        }
         if (A[0].size() != v.size())
-            throw std::string("Attempting to multiply matrix and vector of incompatible sizes.\n");
+            throw std::invalid_argument("Attempting to multiply matrix and vector of incompatible sizes.\n");
         // Initialize u as empty vector of size A.rows
         std::vector<T> u(A.size(), T());
         for (int i = 0; i < A.size(); i++)
@@ -94,7 +102,10 @@ namespace basics {
     }
 
     template <typename T>
-    std::vector<T> rotVec (const std::vector<T>& vec, double phi, double theta, double psi) {
+    std::vector<T> rotVec(const std::vector<T>& vec, double phi, double theta, double psi) {
+        if (vec.size() != 3) {
+            throw std::invalid_argument("Vector size must be 3 in basics::rotVec.");
+        }
         double cphi = std::cos(phi);
         double sphi = std::sin(phi);
         double ctheta = std::cos(theta);
@@ -156,28 +167,56 @@ namespace basics {
                     eigenMatrix(i, j) = matrix[i][j];
                 }
             }
-            return leastSquares(eigenMatrix, b);
+            return leastSquares(eigenMatrix, b); // Recursive call
         } 
         // If VectorType is a vector, convert to Eigen::Matrix with scalar type <T>
-        
         else if constexpr (std::is_same_v<VectorType, std::vector<T>>) {
             Eigen::Matrix<T, Eigen::Dynamic, 1> eigenVector(b.size());
             for (size_t i = 0; i < b.size(); ++i) {
                 eigenVector(i) = b[i];
             }
-            return leastSquares(matrix, eigenVector);
+            Eigen::Matrix<T, Eigen::Dynamic, 1> result = leastSquares(matrix, eigenVector); // Recursive call
+
+            // Convert the result back to std::vector<T>
+            VectorType stdResult(result.size());
+            for (size_t i = 0; i < result.size(); ++i) {
+                stdResult[i] = result(i);
+            }
+            return stdResult;
         }
 
         // If matrix is square, solve directly
-        if (matrix.rows() == matrix.cols()) { return matrix.inverse() * b; }
+        if (matrix.rows() == matrix.cols()) {
+            Eigen::Matrix<T, Eigen::Dynamic, 1> result = matrix.inverse() * b;
 
-// Check if the matrix is underdetermined
+            // Convert the result back to VectorType if necessary
+            if constexpr (std::is_same_v<VectorType, std::vector<T>>) {
+                VectorType stdResult(result.size());
+                for (size_t i = 0; i < result.size(); ++i) {
+                    stdResult[i] = result(i);
+                }
+                return stdResult;
+            }
+            return result;
+        }
+
+        // Check if the matrix is underdetermined
         if (matrix.rows() < matrix.cols()) {
             throw std::invalid_argument("Matrix is underdetermined in basics::leastSquares.");
         }
-        
+
         // Use QR decomposition for least-squares solution
-        return matrix.colPivHouseholderQr().solve(b);
+        Eigen::Matrix<T, Eigen::Dynamic, 1> result = matrix.colPivHouseholderQr().solve(b);
+
+        // Convert the result back to VectorType if necessary
+        if constexpr (std::is_same_v<VectorType, std::vector<T>>) {
+            VectorType stdResult(result.size());
+            for (size_t i = 0; i < result.size(); ++i) {
+                stdResult[i] = result(i);
+            }
+            return stdResult;
+        }
+        return result;
     }
     
     // Convenience function
@@ -188,7 +227,7 @@ namespace basics {
         else if (momType == "0mn") return "C40mn";
         else if (momType == "nnm") return "C4nnm";
         else if (momType == "000") return "OhD";
-        else throw std::string("Momentum " + momType + " not recognized in basics::getSym().\n");
+        else throw std::invalid_argument("Momentum " + momType + " not recognized in basics::getSym().\n");
     }
 
     /////////////////// Forward declarations ///////////////////

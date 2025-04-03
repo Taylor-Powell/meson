@@ -8,9 +8,7 @@ namespace kinFactors {
         std::ifstream file (filename);
         inState s;
         if (!file) {
-            std::string errormsg = "Failed to open file in ";
-            errormsg += __func__;
-            throw errormsg;
+            throw std::runtime_error("Failed to open file in " + std::string(__func__));
         }
         else {
             std::string ignore, var, val;
@@ -64,9 +62,7 @@ namespace kinFactors {
             #endif
             
             if ((anis == 0.0) || (at_mpi == 0.0) || (numLvls == 0)) {
-                std::string errormsg = "One or more variables not initialized in ";
-                errormsg += __func__;
-                throw errormsg;
+                throw std::runtime_error("One or more variables not initialized in " + std::string(__func__));
             }
         }
     }
@@ -227,7 +223,7 @@ namespace kinFactors {
 
         // Check that absHelMax is valid. If must be >= 0 and <= spin
         if (targetAbsHel < 0 || targetAbsHel > spin) {
-            throw std::string("Invalid targetAbsHel in Data::getMoreTuples()\n");
+            throw std::invalid_argument("Invalid targetAbsHel in Data::getMoreTuples()\n");
         }
         s.absHelicity = targetAbsHel;
 
@@ -265,8 +261,12 @@ namespace kinFactors {
     // Get subduced helicity states with coeff from basics::subductHelicity()
     std::vector<std::pair<cd, int>> Data::getHelCoeffs(int etaTilde, std::string momType, std::string irrep, int irrepRow, int absHel) {
         // Sanity checks
-        if (absHel > 1) std::string("abs(helicity) > 1 in Data::getHelStates()\n ");
-        else if (absHel < 0) std::string("abs(helicity) < 0 in Data::getHelStates()\n ");
+        if (absHel > 1) {
+            throw std::invalid_argument("abs(helicity) > 1 in Data::getHelStates().");
+        } 
+        else if (absHel < 0) {
+            throw std::invalid_argument("abs(helicity) < 0 in Data::getHelStates().");
+        }
 
         // Initialize the output vector and the pair<cd, int> struct
         std::vector<std::pair<cd, int>> vals;

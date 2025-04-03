@@ -28,7 +28,7 @@ namespace WignerD {
             std::string errmsg = "\nWignerD::Wigner_d - You have entered an illegal number for J, M, N.";
             errmsg += "\nMust follow these rules: J >= 0, abs(M) <= J, and abs(N) <= J.";
             errmsg += "\nJ = " + std::to_string(J) +  " M = " + std::to_string(M) + " N = " + std::to_string(N);
-            throw std::string(errmsg);
+            throw std::invalid_argument(errmsg);
             return 0.0;
         }
     
@@ -81,7 +81,7 @@ namespace WignerD {
             std::string errmsg = "\nWignerD::Wigner_D - you have entered an illegal number for J, M, N.";
             errmsg += "\nMust follow these rules: J >= 0, abs(M) <= J, and abs(N) <= J.";
             errmsg += "\nJ = " + std::to_string(J) +  " M = " + std::to_string(M) + " N = " + std::to_string(N);
-            throw std::string(errmsg);
+            throw std::invalid_argument(errmsg);
             return 0.0;
         }
 

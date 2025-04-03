@@ -17,7 +17,7 @@ namespace rotations {
                 }
             }          
         }
-        throw std::string("Symmetry " + sym + " not recognized in rotations::getRotAngles.\n");
+        throw std::invalid_argument("Symmetry " + sym + " not recognized in rotations::getRotAngles.\n");
         return {0, 0, 0};
     }
     
@@ -34,11 +34,10 @@ namespace rotations {
             }
         }
         if (sym == "OhD") return;
-        else throw std::string("Symmetry " + sym + " not recognized in rotations::rotPolVec_init.\n");
+        else throw std::invalid_argument("Symmetry " + sym + " not recognized in rotations::rotPolVec_init.\n");
     }
 
     void rotPolVec(std::vector<cd>& polVec, const std::string sym, const std::vector<int> mom3_i) {
-        //std::cout << "rotPolVec called with sym = " << sym << ", mom = " << mom[0] << mom[1] << mom[2] << std::endl;
         std::vector<double> angles = getRotAngles(sym, mom3_i);
         std::vector<cd> polVec_Spatial(polVec.begin() + 1, polVec.end());
         polVec_Spatial = basics::rotVec(polVec_Spatial, angles[0], angles[1], angles[2]);
@@ -66,7 +65,7 @@ namespace rotations {
             double f = 1.0 / std::sqrt(2.0);
             polz = {cd(0,0), cd(f,0), cd(0,-f), cd(0,0)};
         }
-        else throw std::string("Invalid helicity in basics::getPolz4().");
+        else throw std::invalid_argument("Invalid helicity in basics::getPolz4().");
         return polz;
     }
 

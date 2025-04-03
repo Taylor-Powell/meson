@@ -8,7 +8,10 @@
 
 namespace matelem {
     state::state(int V, std::string irrep, double E, double Eerr, std::vector<int> mom3_i, int J, int P, int row, int helicity, double twopi_chiL, bool current) 
-        : V(V), irrep(irrep), E(E), Eerr(Eerr), mom3_i(mom3_i), spin(J), helicity(helicity), parity(P), irrepRow(row) {        
+        : V(V), irrep(irrep), E(E), Eerr(Eerr), mom3_i(mom3_i), spin(J), helicity(helicity), parity(P), irrepRow(row) {   
+        if (mom3_i.size() != 3) {
+            throw std::invalid_argument("Momentum vector must have exactly 3 components in state::state constructor.");
+        }     
         momType = basics::getMomType(mom3_i);
         std::vector<double> mom3 = {mom3_i[0] * twopi_chiL, mom3_i[1] * twopi_chiL, mom3_i[2] * twopi_chiL};
         mom4 = {E, mom3[0], mom3[1], mom3[2]};
@@ -23,7 +26,7 @@ namespace matelem {
 
     void matelem::subductAll(bool isHelState) {
         if (!isHelState) {
-            throw std::string("subductAll called with isHelState = false.\n");
+            throw std::invalid_argument("subductAll called with isHelState = false.\n");
         }
 
         // Helper lambda for debug output
@@ -114,13 +117,16 @@ namespace matelem {
     }
 
     cd matelem::getQsq(const state& in, const state& out) { // Checked
+        if (in.mom4.size() != 4 || out.mom4.size() != 4) {
+            throw std::invalid_argument("Four-momentum vectors must have exactly 4 components in matelem::getQsq().");
+        }
         std::vector<cd> qMom;
         for (int i = 0; i < 4; i++) { qMom.push_back(out.mom4[i] - in.mom4[i]); }
         return (-1.0) * basics::fourDot(qMom, qMom);
     }
 
     void matelem::subductHelicityState(std::vector<state>& s) {
-        if (s.size() != 1) throw std::string("subductState called with vector of size != 1.\n");
+        if (s.size() != 1) throw std::invalid_argument("subductState called with vector of size != 1.\n");
         if (s[0].etaTilde == 0) s[0].etaTilde = s[0].parity * std::pow(-1, s[0].spin);
         if (s[0].helicity == 0) s[0].coeff *= basics::subductHelicity(s[0].etaTilde, s[0].irrep, s[0].momType, s[0].helicity, s[0].irrepRow);
         else {
@@ -133,6 +139,9 @@ namespace matelem {
     }
 
     cd matelem::getOmegaVal(const state& in, const state& out) { // Checked
+        if (in.mom4.size() != 4 || out.mom4.size() != 4) {
+            throw std::invalid_argument("Four-momentum vectors must have exactly 4 components in matelem::getOmegaVal().");
+        }
         cd val = std::pow(basics::fourDot(in.mom4, out.mom4), 2);
         val -= std::pow(in.mState, 2) * std::pow(out.mState, 2);        
         return val;

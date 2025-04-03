@@ -10,7 +10,7 @@ namespace basics {
     // Allows for string to be unordered
     vec2D<int> getMomPerms(const std::string momstr) {
         if (momstr.size() != 3) {
-            throw std::string("Momentum " + momstr + " is not 3 digits in basics::getMomPerms.\n");
+            throw std::invalid_argument("Momentum " + momstr + " is not 3 digits in basics::getMomPerms.\n");
         }
         // Initialize variables
         vec2D<int> perms;
@@ -19,7 +19,7 @@ namespace basics {
         // Convert string to vector of integers
         for (char c : momstr) {
             if (!std::isdigit(c)) {
-                throw std::string("Momentum " + momstr + " is not a set of integers in basics::getMomPerms.\n");
+                throw std::invalid_argument("Momentum " + momstr + " is not a set of integers in basics::getMomPerms.\n");
             }
             mom3_i.push_back(c - '0');
         }
@@ -47,7 +47,7 @@ namespace basics {
 
     vec2D<int> getMomPerms(const std::vector<int>& mom3_i) {
         if (mom3_i.size() != 3) {
-            throw std::string("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " is not 3 digits in basics::getMomPerms.\n");
+            throw std::invalid_argument("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " is not 3 digits in basics::getMomPerms.\n");
         }
         // Initialize variables
         vec2D<int> perms;
@@ -75,9 +75,9 @@ namespace basics {
 
     std::vector<std::string> getIrreps(const std::vector<int> mom3_i, int parity, int spin) {
         // Sanity checks
-        if (spin > 1) throw std::string("Spin > 1 in Data::getIrreps()\n");
-        else if (spin < 0) throw std::string("Spin < 0 in Data::getIrreps()\n");
-        else if (parity != 1 && parity != -1) throw std::string("Invalid parity in Data::getIrreps()\n");
+        if (spin > 1) throw std::invalid_argument("Spin > 1 in Data::getIrreps()\n");
+        else if (spin < 0) throw std::invalid_argument("Spin < 0 in Data::getIrreps()\n");
+        else if (parity != 1 && parity != -1) throw std::invalid_argument("Invalid parity in Data::getIrreps()\n");
 
         std::vector<std::string> irreps;
         int etaTilde = parity * std::pow(-1, spin);
@@ -112,9 +112,9 @@ namespace basics {
 
     std::vector<std::string> getIrreps(const std::string momType, int parity, int spin) {
         // Sanity checks
-        if (spin > 1) throw std::string("Spin > 1 in basics::getIrreps()\n");
-        else if (spin < 0) throw std::string("Spin < 0 in basics::getIrreps()\n");
-        else if (parity != 1 && parity != -1) throw std::string("Invalid parity in basics::getIrreps()\n");
+        if (spin > 1) throw std::invalid_argument("Spin > 1 in basics::getIrreps()\n");
+        else if (spin < 0) throw std::invalid_argument("Spin < 0 in basics::getIrreps()\n");
+        else if (parity != 1 && parity != -1) throw std::invalid_argument("Invalid parity in basics::getIrreps()\n");
 
         std::vector<std::string> irreps;
         int etaTilde = parity * std::pow(-1, spin);
@@ -191,7 +191,7 @@ namespace basics {
     /** Simple function to check if momentum is <= 211 in all permutations */
     bool check3Mom(const std::vector<int> mom3_i) {
         if (mom3_i.size() != 3) {
-            throw std::string("Momentum vector is not 3 digits in basics::check3Mom.\n");
+            throw std::invalid_argument("Momentum vector is not 3 digits in basics::check3Mom.\n");
         }
         for (int i = 0; i < 3; i++) {
             if ((abs(mom3_i[i]) < 3) && (abs(mom3_i[(i+1)%3]) < 2) && (abs(mom3_i[(i+2)%3]) < 2))
@@ -205,7 +205,7 @@ namespace basics {
         for (int i = 0; i < 3; i++) {
             // if not a digit, throw an error
             if (!std::isdigit(momStr[i])) {
-                throw std::string("Momentum " + momStr + " is not a set of integers in basics::getMom3_i.\n");
+                throw std::invalid_argument("Momentum " + momStr + " is not a set of integers in basics::getMom3_i.\n");
             }
             mom3_i.push_back(momStr[i] - '0');
         }
@@ -218,7 +218,7 @@ namespace basics {
      */
     std::string getMomType(const std::vector<int> mom3_i) {
         if (mom3_i.size() != 3) {
-            throw std::string("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " is not 3 digits in basics::getMomType.\n");
+            throw std::invalid_argument("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " is not 3 digits in basics::getMomType.\n");
         }
         std::string sym;
         int mom_sq = basics::dot(mom3_i, mom3_i);
@@ -237,6 +237,6 @@ namespace basics {
                 return "00n"; // 003
             else return "nnm"; // 112
         }
-        else throw std::string("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " not recognized in basics::getMomType.\n");
+        else throw std::invalid_argument("Momentum " + std::to_string(mom3_i[0]) + std::to_string(mom3_i[1]) + std::to_string(mom3_i[2]) + " not recognized in basics::getMomType.\n");
     }
 }
