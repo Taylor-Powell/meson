@@ -154,13 +154,13 @@ namespace basics {
             if (irrep == "A1") return 1.0;
             else if (etaTilde == 1) {
                 if (irrep == "T1m") {
-                    if (irrepRow - 1 == helicity) return 1.0;
+                    if (irrepRow - 2 == helicity) return 1.0;
                     else return 0.0;
                 }
             }
             else if (etaTilde == -1) {
                 if (irrep == "T1p") {
-                    if (irrepRow - 1 == helicity) return 1.0;
+                    if (irrepRow - 2 == helicity) return 1.0;
                     else return 0.0;
                 }
             }
@@ -186,18 +186,6 @@ namespace basics {
             return (kDelta(helicity, 1) + s * etaTilde * kDelta(helicity, -1)) / std::sqrt(2.0);
         }
         return 0.0;
-    }
-
-    /** Simple function to check if momentum is <= 211 in all permutations */
-    bool check3Mom(const std::vector<int> mom3_i) {
-        if (mom3_i.size() != 3) {
-            throw std::invalid_argument("Momentum vector is not 3 digits in basics::check3Mom.\n");
-        }
-        for (int i = 0; i < 3; i++) {
-            if ((abs(mom3_i[i]) < 3) && (abs(mom3_i[(i+1)%3]) < 2) && (abs(mom3_i[(i+2)%3]) < 2))
-                return true;
-        }
-        return false;
     }
 
     std::vector<int> getMom3_i(const std::string momStr) {

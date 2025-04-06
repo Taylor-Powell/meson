@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "outputKinFactors.h"
 #include "errorHandling.h"
+#include "timing.h"
 
 namespace {
     int usage(int argc, char** argv) {
@@ -17,23 +18,20 @@ namespace {
 }
 int main(int argc, char** argv)
 {
-    #if 1
-    // Testing readAndLoop class
     if (argc != 2) {
         return usage(argc, argv);
     }
 
-    try {        
+    try {
+        timing::Timer timer;      
         kinFactors::Data d(argv[1]);
-        // d.printParams();
         d.outputKinematics(qMomList);
+        timer.printElapsed("Execution time");
     }
     catch (...) {
         error::processException();
         return -1;
     }
-
-    #endif
 
     return 0;
 }

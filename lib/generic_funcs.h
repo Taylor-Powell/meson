@@ -128,6 +128,18 @@ namespace basics {
     */
     template <typename T>
     bool isUniquePair_vec2D(const vec2D<T>& list, T v1, T v2, int i1=0, int i2=1, T eps = 1.0e-10) {
+        // Check if list has at least two columns
+        if (list.empty() || list[0].size() < 2) {
+            throw std::invalid_argument("List must have at least two columns in basics::isUniquePair_vec2D.");
+        }
+        // Check if i1 and i2 are valid indices
+        if (i1 < 0 || i1 >= list[0].size() || i2 < 0 || i2 >= list[0].size()) {
+            throw std::out_of_range("Column indices are out of range in basics::isUniquePair_vec2D.");
+        }
+        // Check if list has at least one row
+        if (list.size() == 0) {
+            throw std::invalid_argument("List must have at least one row in basics::isUniquePair_vec2D.");
+        }
         for (int i = 0; i < list.size(); i++)
             if ((std::abs(list[i][i1] - v1) < eps) && 
                 (std::abs(list[i][i2] - v2) < eps))
@@ -145,6 +157,18 @@ namespace basics {
     */
     template <typename T>
     int findMatchingPair_vec2D(const vec2D<T>& list, T v1, T v2, int i1=0, int i2=1, T eps = 1.0e-10) {
+        // Check if list has at least two columns
+        if (list.empty() || list[0].size() < 2) {
+            throw std::invalid_argument("List must have at least two columns in basics::findMatchingPair_vec2D.");
+        }
+        // Check if i1 and i2 are valid indices
+        if (i1 < 0 || i1 >= list[0].size() || i2 < 0 || i2 >= list[0].size()) {
+            throw std::out_of_range("Column indices are out of range in basics::findMatchingPair_vec2D.");
+        }
+        // Check if list has at least one row
+        if (list.size() == 0) {
+            throw std::invalid_argument("List must have at least one row in basics::findMatchingPair_vec2D.");
+        }
         for (int i = 0; i < list.size(); i++)
             if ((std::abs(list[i][i1] - v1) < eps) && 
                 (std::abs(list[i][i2] - v2) < eps))
@@ -230,6 +254,26 @@ namespace basics {
         else throw std::invalid_argument("Momentum " + momType + " not recognized in basics::getSym().\n");
     }
 
+    // Simple function to check if momentum is <= {211} in all permutations
+    inline bool check3Mom(const std::vector<int>& mom3_i) {
+        if (mom3_i.size() != 3) {
+            throw std::invalid_argument("Momentum vector is not 3 digits in basics::check3Mom.\n");
+        }
+        for (int i = 0; i < 3; i++) {
+            if ((abs(mom3_i[i]) < 3) && (abs(mom3_i[(i+1)%3]) < 2) && (abs(mom3_i[(i+2)%3]) < 2))
+                return true;
+        }
+        return false;
+    }
+    
+    // Function to see if mom3_i is {000}
+    inline bool isZero3Mom(const std::vector<int>& mom3_i) {
+        if (mom3_i.size() != 3) {
+            throw std::invalid_argument("Momentum vector is not 3 digits in basics::isZero3Mom.\n");
+        }
+        return (mom3_i[0] == 0 && mom3_i[1] == 0 && mom3_i[2] == 0);
+    }
+
     /////////////////// Forward declarations ///////////////////
 
     // Overloaded function to get all permutations of a 3-momentum
@@ -244,17 +288,14 @@ namespace basics {
     
     // Function to get the subduction coefficients for a given helicity
     double subductHelicity(int etaTilde, const std::string irrep, const std::string momType, int helicity, int irrepRow);
-
-    // Simple function to check if momentum is <= 211 in all permutations */
-    bool check3Mom(const std::vector<int> mom3_i);
-
     std::vector<int> getMom3_i(const std::string momStr);
 
     // Convenience function
     std::string getMomType(const std::vector<int> mom3_i);
 
     // Test function for Eigen
-    void computeGramMatrix(const std::vector<std::vector<double>>& mat) {
+    template <typename T>
+    void computeGramMatrix(const std::vector<std::vector<T>>& mat) {
         // Map mat to a MatrixXd
         Eigen::MatrixXd eigenMat(mat.size(), mat[0].size());
         for (size_t i = 0; i < mat.size(); ++i) {
@@ -262,6 +303,9 @@ namespace basics {
                 eigenMat(i, j) = mat[i][j];
             }
         }
+        Eigen::MatrixXd gramMatrix = eigenMat.transpose() * eigenMat;
+        std::cout << "Gram matrix:\n" << gramMatrix << std::endl;
+        return;
     }
 }
 

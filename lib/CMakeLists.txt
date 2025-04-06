@@ -13,6 +13,7 @@ set(MESON_HDRS
     outputKinFactors.h
     Wigner.h
     errorHandling.h
+    timing.h
 )
 
 install(FILES ${MESON_HDRS} DESTINATION include/meson)

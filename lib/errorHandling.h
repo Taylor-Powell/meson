@@ -9,12 +9,23 @@
 #include <string>
 
 namespace error {
+    template <typename T>
+    void processCodeException(const T& e) {
+        auto c = e.code();
+        std::cerr << "- category: " << c.category().name() << std::endl;
+        std::cerr << "-value: " << c.value() << std::endl;
+        std::cerr << "- message: " << c.message() << std::endl;
+        std::cerr << "- def category: " << c.default_error_condition().category().name() << std::endl;
+        std::cerr << "- def value: " << c.default_error_condition().value() << std::endl;
+        std::cerr << "- def message: " << c.default_error_condition().message() << std::endl;
+    }
+
     /**
      * Processes exceptions and outputs appropriate error messages.
      * This function should be called inside a catch block.
      * Pulled from The C++ Standard Library 2nd edition (page 50-51)
      */
-    inline void processException() {
+    void processException() {
         try {
             throw; // Re-throw the current exception to identify its type
         }
@@ -39,6 +50,9 @@ namespace error {
         catch (const std::domain_error& e) {
             std::cerr << "\n\nDomain Error:\n" << e.what() << std::endl;
         }
+        catch (const std::out_of_range& e) {
+            std::cerr << "\n\nOut of Range Error:\n" << e.what() << std::endl;
+        }
         catch (const std::runtime_error& e) {
             std::cerr << "\n\nRuntime Error:\n" << e.what() << std::endl;
         }
@@ -51,17 +65,6 @@ namespace error {
         catch (...) {
             std::cerr << "\n\nUnknown Error occurred.\n";
         }
-    }
-
-    template <typename T>
-    void processCodeException(const T& e) {
-        auto c = e.code();
-        std::cerr << "- category: " << c.category().name() << std::endl;
-        std::cerr << "-value: " << c.value() << std::endl;
-        std::cerr << "- message: " << c.message() << std::endl;
-        std::cerr << "- def category: " << c.default_error_condition().name() << std::endl;
-        std::cerr << "- def value: " << c.default_error_condition().value() << std::endl;
-        std::cerr << "- def message: " << c.default_error_condition().message() << std::endl;
     }
 }
 

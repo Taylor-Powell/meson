@@ -1,5 +1,7 @@
 #include <iomanip>
 #include <complex>
+#include <tuple>
+#include <Eigen/Dense>
 #include "outputKinFactors.h"
 #include "matelem.h"
 
@@ -103,12 +105,20 @@ namespace kinFactors {
             std::vector<stateTuple> temp = getTuples(qMomList[i], -1, 1, false);
             qTuples.insert(qTuples.end(), temp.begin(), temp.end());
         }
+        std::cout << "***There are " << qTuples.size() << " qTuples and " << inStates.size() << " b1 states.***\n" << std::endl;
+
 
         // Iterate over lines of inState txt file (b1 states)
         for (int i = 0; i < inStates.size(); i++) {
             inState s = inStates[i];
+            std::cout << "Processing b1 state with V" << s.V << " p={" 
+                      << s.mom3_i[0] << "," << s.mom3_i[1] << "," << s.mom3_i[2]
+                      << "} " << s.irrep << "(" << s.irrepRow << ") E=" << s.E << std::endl;
             double coeff = basics::subductHelicity(etaTilde, s.irrep, s.momType, inHelicity, s.irrepRow);
-            if (std::abs(coeff) < epsilon) continue;
+            if (std::abs(coeff) < epsilon) {
+                std::cout << "    Skipping this state. Subduction coeff for b1 state is zero.\n" << std::endl;
+                continue;
+            }
 
             // New file for each level
             std::ofstream fout(s.outfile);
@@ -119,7 +129,9 @@ namespace kinFactors {
             //      contain valid 3-momenta
             if (!basics::check3Mom(s.mom3_i)) continue;
             basics::vec2D<int> pMomList = basics::getMomPerms(s.mom3_i);
-            #if 1 // Debugging with one permutation
+
+            std::cout << "    There are " << pMomList.size() * qTuples.size() << " combinations of b1 and current permutations." << std::endl;
+            #if 0 // Debugging with one permutation
             pMomList.clear();
             pMomList.push_back(s.mom3_i); // Only one permutation for debugging
             #endif
@@ -129,7 +141,17 @@ namespace kinFactors {
                 matelem::state in(s.V, s.irrep, s.E, s.Eerr, pMomList[k], spin, parity, s.irrepRow, inHelicity, twopi_chiL, false);
 
                 // Iterate over all qTuples (mom3, irrep, irrepRow)
-                for(int qdx = 0; qdx < qTuples.size(); qdx++) {
+                for (int qdx = 0; qdx < qTuples.size(); qdx++) {
+
+                    /** @details
+                     * letting p_in = p_out = {0,0,0} gives Omega = 0, 
+                     * which gives NaN values for kin factors
+                     * So I'm skipping this case for now 
+                     * */
+                    if (basics::isZero3Mom(pMomList[k]) && basics::isZero3Mom(qTuples[qdx].mom3_i)) {
+                        continue;
+                    }
+
                     // Fix the pion momentum and irrep, then ensure piMom < 211
                     std::vector<int> piMom3_i;
                     std::string pi_irrep = "A1"; // Inflexible, CHANGE THIS if generalizing
@@ -155,17 +177,63 @@ namespace kinFactors {
                 }
             }           
 
-            // Sort ouytStructs by Qsq
+            // Sort outStructs by Qsq
             std::vector<std::pair<double, int>> QsqIndex;
-            std::cout << "\nThere are " << outStructs.size() << " kinematic factors.\n" << std::endl;
+            std::cout << "    There are " << outStructs.size() << " terms with nonzero kinematic factors." << std::endl;
             for (int i = 0; i < outStructs.size(); i++) {
                 QsqIndex.push_back(std::make_pair(outStructs[i].Qsq.real(), i));
             }
             std::sort(QsqIndex.begin(), QsqIndex.end());
+
+            // Identify unique Qsq values and collect the indices and counts
+            std::vector<std::tuple<double, int, int>> uniqueQsqIndex; // {Qsq value, starting index, count}
+            double lastQsq = QsqIndex[0].first;
+            int startIndex = QsqIndex[0].second;
+            int currentCount = 1;
+
+            for (int i = 1; i < QsqIndex.size(); i++) {
+                if (std::abs(QsqIndex[i].first - lastQsq) > epsilon) {
+                    // Push the last Qsq value, its starting index, and its count
+                    uniqueQsqIndex.push_back(std::make_tuple(lastQsq, startIndex, currentCount));
+                    // Update for the new Qsq value
+                    lastQsq = QsqIndex[i].first;
+                    startIndex = QsqIndex[i].second;
+                    currentCount = 1;
+                } else {
+                    currentCount++;
+                }
+            }
+            // Push the last Qsq value, its starting index, and its count
+            uniqueQsqIndex.push_back(std::make_tuple(lastQsq, startIndex, currentCount));
+
+            std::cout << "    There are " << uniqueQsqIndex.size() << " unique Qsq values." << std::endl;
+
+            #if 0 // Output the count per Qsq
+            std::cout << "    Count per Qsq: {";
+            for (size_t i = 0; i < uniqueQsqIndex.size(); i++) {
+                std::cout << std::get<2>(uniqueQsqIndex[i]); // Output the count
+                if (i != uniqueQsqIndex.size() - 1) {
+                    std::cout << ", ";
+                }
+            }
+            std::cout << "}.\n" << std::endl;
+            #else // Just output the number of underdetermined, square, and overdetermined
+            int singles = 0, doubles = 0, other = 0;
+            for (size_t i = 0; i < uniqueQsqIndex.size(); i++) {
+                if (std::get<2>(uniqueQsqIndex[i]) == 1) singles++;
+                else if (std::get<2>(uniqueQsqIndex[i]) == 2) doubles++;
+                else other++;
+            }
+            std::cout << "    There are " << singles << " underdetermined, " << doubles << " square, and " << other << " overdetermined.\n" << std::endl;
+            #endif
+
+            // Output to file
             for (int i = 0; i < QsqIndex.size(); i++) {
                 int index = QsqIndex[i].second;
                 fout << outStructs[index].outstring << std::endl;
+                #if 0
                 std::cout << "idx=" << index << ": " << outStructs[index].outstring << std::endl;
+                #endif
             }
             fout.close();
         }

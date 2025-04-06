@@ -30,7 +30,7 @@ namespace matelem {
         }
 
         // Helper lambda for debug output
-        #if 1
+        #if 0
         auto debugZeroCoeff = [&](const state& s, const std::string& type) {
             double eps = 1e-10;
             if (std::abs(s.coeff) < eps) {
@@ -56,7 +56,6 @@ namespace matelem {
     }
     
     bool matelem::calcKinFactors() {
-        // std::cout << "Calculating kinematic factors..." << std::endl;
         std::vector<cd> kin;
         std::vector<std::vector<int>> indices;
         std::vector<double> coeffs;
@@ -89,6 +88,16 @@ namespace matelem {
                     coeffs.push_back(init[i].coeff * cur[j].coeff * fin[k].coeff);
                     kin.clear();
                     kin = kinFactors(init[i], cur[j], fin[k]);
+
+                    if ((std::abs(kin[1]) < epsilon) && (std::abs(kin[2]) < epsilon)) {
+                        #if 0
+                        std::cout << "Skipping kinematic factors with zero coefficient." << std::endl;
+                        skipCount++;
+                        #endif
+
+                        continue;
+                    }
+
                     #if 0
                     std::cout << "Kinematic factors for state " << i << " " << j << " " << k << ": ";
                     std::cout << "E1 = " << kin[0];
@@ -143,7 +152,12 @@ namespace matelem {
             throw std::invalid_argument("Four-momentum vectors must have exactly 4 components in matelem::getOmegaVal().");
         }
         cd val = std::pow(basics::fourDot(in.mom4, out.mom4), 2);
-        val -= std::pow(in.mState, 2) * std::pow(out.mState, 2);        
+        val -= std::pow(in.mState, 2) * std::pow(out.mState, 2);
+        // If Omega = 0, throw an error
+        if (std::abs(val.real()) < 1e-10 && std::abs(val.imag()) < 1e-10) {
+            // Throw message should include fourDot(in.mom4, out.mom4) and in.mState, out.mState
+            throw std::runtime_error("Omega is zero in matelem::getOmegaVal(). FourDot(in.mom4, out.mom4) = " + std::to_string(basics::fourDot(in.mom4, out.mom4).real()) + " + " + std::to_string(basics::fourDot(in.mom4, out.mom4).imag()) + "i. m_in = " + std::to_string(in.mState) + ", m_out = " + std::to_string(out.mState));            
+        }      
         return val;
     }
 
@@ -152,43 +166,15 @@ namespace matelem {
         cd Omega = getOmegaVal(in, out);
         cd tempVal;
 
-        //////////////////////////////////////////////////////////////////////////////////////////
-        #if 0
-        // Output input values for each state for debugging
-        std::cout << "in.formMom = (";
-        for (int i = 0; i < 4; i++) {
-            std::cout << in.fourMom[i] << ", ";
-        }
-        std::cout << ")" << std::endl;
-        std::cout << "in.polVec = (";
-        for (int i = 0; i < 4; i++) {
-            std::cout << in.polVec[i] << ", ";
-        }
-        std::cout <<  ")" << std::endl;
-        std::cout << "cur.fourMom = (";
-        for (int i = 0; i < 4; i++) {
-            std::cout << cur.fourMom[i] << ", ";
-        }
-        std::cout <<  ")" << std::endl;
-        std::cout << "cur.polVec = (";
-        for (int i = 0; i < 4; i++) {
-            std::cout << cur.polVec[i] << ", ";
-        }
-        std::cout <<  ")" << std::endl;
-        std::cout << "out.fourMom = (";
-        for (int i = 0; i < 4; i++) {
-            std::cout << out.fourMom[i] << ", ";
-        }
-        std::cout <<  ")" << std::endl;
-        std::cout << "out.polVec = (";
-        for (int i = 0; i < 4; i++) {
-            std::cout << out.polVec[i] << ", ";
-        }
-        std::cout <<  ")\n" << std::endl;
-        #endif
-        //////////////////////////////////////////////////////////////////////////////////////////
         // Calculate Qsq
         kin.push_back(getQsq(in, out));
+
+        // Lambda to check for NaN values
+        auto checkNaN = [](const cd& val, const std::string& msg = "") {
+            if (std::isnan(val.real()) || std::isnan(val.imag())) {
+                throw std::runtime_error("Coefficient is NaN in matelem::kinFactors(). " + msg);
+            }
+        };
 
         // Calculate the E1 coefficient
         std::vector<cd> Ecoeff;
@@ -196,7 +182,8 @@ namespace matelem {
             tempVal = basics::fourDot(in.mom4, out.mom4) * in.mom4[i];
             tempVal -= std::pow(in.mState, 2) * out.mom4[i];
             tempVal *= basics::fourDot(in.polVec, out.mom4) / Omega;
-            tempVal = out.polVec[i] - tempVal; 
+            tempVal = out.polVec[i] - tempVal;
+            checkNaN(tempVal, "Computed Ecoeff[" + std::to_string(i) + "] for Ecoeff.");
             Ecoeff.push_back(tempVal);
         }
         kin.push_back(basics::fourDot(Ecoeff, cur.polVec));
@@ -210,6 +197,7 @@ namespace matelem {
             tempVal -= std::pow(out.mState, 2) * in.mom4[i];
             tempVal *= basics::fourDot(in.polVec, out.mom4) * in.mState / Omega;
             tempVal /= std::sqrt(basics::fourDot(cur.mom4, cur.mom4));
+            checkNaN(tempVal, "Computed Ccoeff[" + std::to_string(i) + "] for Ccoeff.");
             Ccoeff.push_back(tempVal);
         }
         kin.push_back(basics::fourDot(Ccoeff, cur.polVec));
@@ -235,8 +223,8 @@ namespace matelem {
             oss << "     b1_hel=" << init[indices[i][0]].helicity << ", ";
             oss << "q_hel=" << cur[indices[i][1]].helicity << ", ";
             oss << "coeff=" << basics::formatValue(coeffs[i]) << ", ";
-            oss << "E1=(" << basics::formatValue(outStruct.kFactors[i][0].real()) << ", " << basics::formatValue(outStruct.kFactors[i][0].imag()) << "), ";
-            oss << "C1=(" << basics::formatValue(outStruct.kFactors[i][1].real()) << ", " << basics::formatValue(outStruct.kFactors[i][1].imag()) << ")";
+            oss << "E1=(" << basics::formatValue(outStruct.kFactors[i][1].real()) << ", " << basics::formatValue(outStruct.kFactors[i][0].imag()) << "), ";
+            oss << "C1=(" << basics::formatValue(outStruct.kFactors[i][2].real()) << ", " << basics::formatValue(outStruct.kFactors[i][1].imag()) << ")";
             if (i != outStruct.kFactors.size() - 1) oss << "\n";
         }
 
