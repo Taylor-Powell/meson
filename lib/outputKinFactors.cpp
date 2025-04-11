@@ -88,20 +88,14 @@ namespace kinFactors {
     }
 
     void Data::outputKinematics(const basics::vec2D<int> qMomList) {
+        double epsilon = 1.0e-10;
+        std::vector<matelem::outputStruct> outStructs;
         // Fix helicity of b1 to 0
         int inHelicity = 0;
 
-        // Define a small epsilon
-        double epsilon = 1.0e-10;
-
-        // Define outputStruct
-        std::vector<matelem::outputStruct> outStructs;
-
-        // Iterate over the qMomList to get the qTuples
-        // These are fixed for each qMom, so only need to be calculated once 
+        // Generate qTuples
         std::vector<stateTuple> qTuples;
         for (int i = 0; i < qMomList.size(); i++) {
-            // Use version allowing for absHel = {0, 1} and no mom3_i rotations
             std::vector<stateTuple> temp = getTuples(qMomList[i], -1, 1, false);
             qTuples.insert(qTuples.end(), temp.begin(), temp.end());
         }
@@ -125,8 +119,6 @@ namespace kinFactors {
             double twopi_chiL = 2.0 * std::numbers::pi / (anis * s.V);
 
             // Make the 3-momentum base vector, check if it's <211, and get the momentum permutations
-            // The check here should be redundant since the input file should only
-            //      contain valid 3-momenta
             if (!basics::check3Mom(s.mom3_i)) continue;
             basics::vec2D<int> pMomList = basics::getMomPerms(s.mom3_i);
 
@@ -171,19 +163,26 @@ namespace kinFactors {
                     // Create the matrix element container, then calculate the kinematic factors and append them to the output container
                     matelem::matelem m(in, cur, out, s.V, anis, twopi_chiL);
                     m.subductAll(true);
-                    bool anythingUseful = m.calcKinFactors();
 
-                    if (anythingUseful) outStructs.push_back(m.getOutStruct());
+                    if (m.calcKinFactors()) outStructs.push_back(m.getOutStruct());
                 }
             }           
 
             // Sort outStructs by Qsq
             std::vector<std::pair<double, int>> QsqIndex;
+            std::vector<std::tuple<double, cd, cd, int>> QsqIndex2;
             std::cout << "    There are " << outStructs.size() << " terms with nonzero kinematic factors." << std::endl;
             for (int i = 0; i < outStructs.size(); i++) {
                 QsqIndex.push_back(std::make_pair(outStructs[i].Qsq.real(), i));
             }
             std::sort(QsqIndex.begin(), QsqIndex.end());
+
+            for (int i = 0; i < outStructs.size(); i++) {
+                QsqIndex2.push_back(std::make_tuple(outStructs[i].Qsq.real(), outStructs[i].kFactors[0][0], outStructs[i].kFactors[0][1], i));
+            }
+            // Sort QsqIndex2 using helper function
+            sort(QsqIndex2, epsilon);
+
 
             // Identify unique Qsq values and collect the indices and counts
             std::vector<std::tuple<double, int, int>> uniqueQsqIndex; // {Qsq value, starting index, count}
@@ -230,6 +229,13 @@ namespace kinFactors {
             // Output to file
             for (int i = 0; i < QsqIndex.size(); i++) {
                 int index = QsqIndex[i].second;
+                // fout << outStructs[index].outstring << std::endl;
+                #if 0
+                std::cout << "idx=" << index << ": " << outStructs[index].outstring << std::endl;
+                #endif
+            }
+            for (int i = 0; i < QsqIndex2.size(); i++) {
+                int index = std::get<3>(QsqIndex2[i]);
                 fout << outStructs[index].outstring << std::endl;
                 #if 0
                 std::cout << "idx=" << index << ": " << outStructs[index].outstring << std::endl;
@@ -343,5 +349,16 @@ namespace kinFactors {
             vals.push_back(std::pair(basics::subductHelicity(etaTilde, irrep, momType, -absHel, irrepRow), -absHel));
         }
         return vals;
+    }
+
+    // Helper function to sort outStructs
+    void sort(std::vector<std::tuple<double, cd, cd, int>>& QsqIndex2, double epsilon) {
+        std::sort(QsqIndex2.begin(), QsqIndex2.end(), [epsilon](const auto& a, const auto& b) {
+            if (std::abs(std::get<0>(a) - std::get<0>(b)) > epsilon) return std::get<0>(a) < std::get<0>(b);
+            if (std::abs(std::get<1>(a).real() - std::get<1>(b).real()) > epsilon) return std::get<1>(a).real() < std::get<1>(b).real();
+            if (std::abs(std::get<1>(a).imag() - std::get<1>(b).imag()) > epsilon) return std::get<1>(a).imag() < std::get<1>(b).imag();
+            if (std::abs(std::get<2>(a).real() - std::get<2>(b).real()) > epsilon) return std::get<2>(a).real() < std::get<2>(b).real();
+            return std::get<2>(a).imag() < std::get<2>(b).imag();
+        });
     }
 }
